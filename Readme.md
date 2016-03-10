@@ -1,0 +1,22 @@
+## Road Map ##
+- ~~View a node~~
+- ~~View the node's parents~~
+- ~~View the node's children~~
+- ~~Click to focus on another node~~
+- Edit the label of a node
+- Add another node
+- Delete a node
+- Persist Data (client side)
+- Keyboard Shortcuts
+ - Navigate Graph
+ - Edit Node
+- Host as stand alone application (electron)
+- Export whole graph
+- Export sub-set of graph
+- Cloud data Sync
+- Searching
+- Add arbitrary links to searched nodes
+- Remove arbitrary links
+- Attachments
+- Types
+- Filter view by type
