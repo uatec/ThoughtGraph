@@ -99,7 +99,13 @@ function renderLines(nodes)
         return _.map(n.props.data.children, function(childName) {
             var child = _.find(nodes, function(c) { return c.props.data.name == childName; });
             if ( child == null ) { return null; } // if the child isn't present, we shouldn't render a link to it
-            return <Line x1={n.props.x} x2={child.props.x} y1={n.props.y} y2={child.props.y} />;
+            
+            var start = n.props.x + ',' + n.props.y;
+            var startCP = n.props.x + ',' + (n.props.y + 100);
+            var endCP = child.props.x + ',' + (child.props.y - 100);
+            var end = child.props.x + ',' + child.props.y;
+            
+            return <path d={'M' + start + ' C' + startCP + ' ' + endCP + ' ' + end} stroke="blue" stroke-width="5" fill="none" />;
         });   
     }).filter(function(n) { return n != null; });
 }
