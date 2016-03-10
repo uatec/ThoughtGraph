@@ -6,6 +6,8 @@ var Image = SVG.Image;
 var Circle = SVG.Circle;
 var Line = SVG.Line;
 
+var Node = require('./Node.jsx');
+
 var _ = require('lodash');
 
 // If you are going to be using stores, be sure to first load in the `Fluxxor`
@@ -63,16 +65,16 @@ function renderNodes(nodes, centralNodeName)
         
         if ( _.find(n.children || [], function(c) { return c == centralNode.name; } ) )// if this node is a parent of the central node
         {
-            parents.push(<Circle y={250} data={n}/>);    
+            parents.push(<Node y={250} data={n} label={n.name} />);    
         }
         
         if ( _.find(centralNode.children || [], function(c) { return c == n.name; }) ) // if this node is a child of the central node
         {
-            children.push(<Circle y={750} data={n}/>);            
+            children.push(<Node y={750} data={n} label={n.name}/>);            
         }
     });
     
-    circles.push(<Circle x={500} y={500} data={centralNode}/>);
+    circles.push(<Node x={500} y={500} data={centralNode} label={centralNode.name}/>);
     
     var x = 500 - (750/2);
     var parentSpacing = 750/parents.length;
@@ -105,7 +107,7 @@ function renderLines(nodes)
             var endCP = child.props.x + ',' + (child.props.y - 100);
             var end = child.props.x + ',' + child.props.y;
             
-            return <path d={'M' + start + ' C' + startCP + ' ' + endCP + ' ' + end} stroke="blue" stroke-width="5" fill="none" />;
+            return <path d={'M' + start + ' C' + startCP + ' ' + endCP + ' ' + end} stroke="blue" strokeWidth="2" fill="none" />;
         });   
     }).filter(function(n) { return n != null; });
 }
@@ -119,8 +121,8 @@ module.exports = React.createClass({
     return (
       <div className='home-page'>
         <Image>
-            {nodes}
             {lines}
+            {nodes}
         </Image>
       </div>
     );
