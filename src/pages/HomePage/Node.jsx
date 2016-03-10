@@ -5,7 +5,8 @@ module.exports = React.createClass({
   propTypes: {
       x: React.PropTypes.number,
       y: React.PropTypes.number,
-      label: React.PropTypes.string
+      label: React.PropTypes.string,
+      onClick: React.PropTypes.func
   },
   
   enterEditMode: function()
@@ -20,9 +21,9 @@ module.exports = React.createClass({
   },
   
   render: function () {
-    return <g>      
+    return <g onClick={this.props.onClick}>      
         <circle cx={this.props.x} cy={this.props.y} r="5" fill="orange" />
-        <text onClick={this.enterEditMode} x={this.props.x+10} y={this.props.y+5}>{this.props.label}</text>
+        <text x={this.props.x+10} y={this.props.y+5}>{this.props.label}</text>
     </g>;
   }
 });

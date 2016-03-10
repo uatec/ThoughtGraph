@@ -54,44 +54,6 @@ var node_data = [
     {name: "Lionel"}
     ];
 
-function renderNodes(nodes, centralNodeName)
-{
-    var centralNode = _.find(nodes, function(c) { return c.name == centralNodeName; });
-    var circles = [];
-    var parents = [];
-    var children = [];
-    _.forEach(nodes, function(n) {
-        if ( n == centralNode ) { return ; } // skip the central node, we've already assigned it
-        
-        if ( _.find(n.children || [], function(c) { return c == centralNode.name; } ) )// if this node is a parent of the central node
-        {
-            parents.push(<Node y={250} data={n} label={n.name} />);    
-        }
-        
-        if ( _.find(centralNode.children || [], function(c) { return c == n.name; }) ) // if this node is a child of the central node
-        {
-            children.push(<Node y={750} data={n} label={n.name}/>);            
-        }
-    });
-    
-    circles.push(<Node x={500} y={500} data={centralNode} label={centralNode.name}/>);
-    
-    var x = 500 - (750/2);
-    var parentSpacing = 750/parents.length;
-    
-    parents.forEach(function(p, i) {
-        p.props.x = x + (parentSpacing * (i + 1))/2;
-    });
-    
-    var childSpacing = 750/children.length;
-    
-    children.forEach(function(p, i) {
-        p.props.x = x + (childSpacing * (i + 1))/2;
-    });
-    
-    return _.concat(circles, parents, children); 
-}
-
 function renderLines(nodes)
 {
     var lineList = [];
@@ -114,8 +76,60 @@ function renderLines(nodes)
 
 module.exports = React.createClass({
 
+    renderNodes: function (nodes, centralNodeName)
+    {
+        var centralNode = _.find(nodes, function(c) { return c.name == centralNodeName; });
+        var circles = [];
+        var parents = [];
+        var children = [];
+        _.forEach(nodes, function(n) {
+            if ( n == centralNode ) { return ; } // skip the central node, we've already assigned it
+            
+            if ( _.find(n.children || [], function(c) { return c == centralNode.name; } ) )// if this node is a parent of the central node
+            {
+                parents.push(<Node y={250} data={n} label={n.name} onClick={this.selectNode.bind(this, n)} />);    
+            }
+            
+            if ( _.find(centralNode.children || [], function(c) { return c == n.name; }) ) // if this node is a child of the central node
+            {
+                children.push(<Node y={750} data={n} label={n.name} onClick={this.selectNode.bind(this, n)}/>);            
+            }
+        }.bind(this));
+        
+        circles.push(<Node x={500} y={500} data={centralNode} label={centralNode.name}/>);
+        
+        var x = 500 - (750/2);
+        var parentSpacing = 750/parents.length;
+        
+        parents.forEach(function(p, i) {
+            p.props.x = x + (parentSpacing * (i + 1))/2;
+        });
+        
+        var childSpacing = 750/children.length;
+        
+        children.forEach(function(p, i) {
+            p.props.x = x + (childSpacing * (i + 1))/2;
+        });
+        
+        return _.concat(circles, parents, children); 
+  },
+  
+  getInitialState: function()
+  {
+    return {
+        selectedNode: "Luke"
+        };
+  },
+  
+  
+  selectNode: function(selectedNode) {
+    this.setState({
+        selectedNode: selectedNode.name
+        });
+  },
+  
   render: function () {
-    var nodes = renderNodes(node_data, "Luke");
+    var nodes = this.renderNodes(node_data, this.state.selectedNode);
     var lines = renderLines(nodes);
 
     return (
