@@ -99,8 +99,4 @@ var routes = (
   </Route>
 );
 
-// Router.run(routes, function (Handler) {
-//   React.render(<Handler />, document.body);
-// });
-  
 ReactDOM.render(<Router history={router.browserHistory}>{routes}</Router>, document.body);

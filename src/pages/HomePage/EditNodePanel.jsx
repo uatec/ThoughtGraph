@@ -10,9 +10,9 @@ var _ = require('lodash');
 module.exports = React.createClass({
 
     propTypes: {
-        node: React.PropTypes.object.required,
-        onSave: React.PropTypes.func.required,
-        onClose: React.PropTypes.func.required
+        node: React.PropTypes.object.isRequired,
+        onSave: React.PropTypes.func.isRequired,
+        onClose: React.PropTypes.func.isRequired
     },
 
     getInitialState: function() {
