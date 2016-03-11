@@ -64,10 +64,9 @@ module.exports = GraphStore = Fluxxor.createStore({
     getRelatedNodes: function(focussedNodeId)
     {  
         var focussedNode = this.nodes[focussedNodeId];
-        console.log('get parent', this);
         return [focussedNode]
             .concat(this.getParents(focussedNodeId)) // find parents
-            .concat(_.map(focussedNode.children, function(nid) { console.log('get child', this); return this.nodes[nid];}.bind(this)))
+            .concat(_.map(focussedNode.children, function(nid) { return this.nodes[nid];}.bind(this)))
             ;
     },
     
