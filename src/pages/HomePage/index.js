@@ -12,6 +12,10 @@ var _ = require('lodash');
 
 var EditNodePanel = require('./EditNodePanel.jsx');
 
+var Fluxxor = require('fluxxor');
+var FluxMixin = Fluxxor.FluxMixin(React),
+    StoreWatchMixin = Fluxxor.StoreWatchMixin;
+    
 var mui = require('material-ui'),
      FlatButton = mui.FlatButton,
      TextField = mui.TextField,
@@ -26,50 +30,6 @@ function guid() {
   return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
     s4() + '-' + s4() + s4() + s4();
 }
-
-// If you are going to be using stores, be sure to first load in the `Fluxxor`
-// module.
-//
-//     var Fluxxor = require('Fluxxor');
-//
-// If you want to leverage the use of stores, a suggestion would be to
-// initialize an object, and set it to a `stores` variable, and adding a new
-// instance of the store as a property to the object, like so:
-//
-//     var stores = {
-//       SomeStore: new SomeStore()
-//     };
-//
-// And also, because we are using the Flux architecture, you may also initialize
-// an object full of methods that represent "actions" that will be called upon
-// by a "dispatcher", like so:
-//
-//     var actions = {
-//       doSomething: function (info) {
-//         this.dispatch('DO_SOMETHING', {info: info});
-//       }
-//     };
-//
-// And finally, you would pass the stores and actions to our dispatcher, like
-// so:
-//
-//     var flux = new Fluxxor.Flux(stores, actions);
-//
-// And, then, you would pass in the reference of your dispatcher to the view
-// relies on the dispatcher (that view is returned by the `render` method), like
-// so:
-//
-//     <SomeView flux={flux} />
-
-
-var node_data = [
-    {id: 0, name: "Matthew", children: [ 1, 2 ]}, 
-    {id: 1, name: "Mark", children: []}, 
-    {id: 2, name: "Luke", children: [3, 4, 5]}, 
-    {id: 3, name: "John", children: []}, 
-    {id: 4, name: "Peter", children: []}, 
-    {id: 5, name: "Lionel", children: []}
-    ];
 
 function renderLines(nodes)
 {
@@ -94,6 +54,15 @@ function renderLines(nodes)
 }
 
 module.exports = React.createClass({
+
+    mixins: [FluxMixin, StoreWatchMixin('GraphStore')],
+    
+    getStateFromFlux: function() {
+        var flux = this.getFlux();
+        return {
+            x: guid(),
+        };
+    },
 
     renderNodes: function (nodes, centralNodeName)
     {
@@ -151,57 +120,42 @@ module.exports = React.createClass({
   
   componentDidMount: function() {
     document.onkeypress = function(e) {
-        e = e || window.event;
-        var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
-        if (charCode) {
-            var key = String.fromCharCode(charCode);
-            if ( key in this.getKeyBindings() )
-            {
-                this.getKeyBindings()[key].bind(this)(e);
+    
+        if ( !this.state.editNode ) {
+            e = e || window.event;
+            var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
+            if (charCode) {
+                var key = String.fromCharCode(charCode);
+                if ( key in this.getKeyBindings() )
+                {
+                    this.getKeyBindings()[key].bind(this)(e);
+                }
             }
         }
     }.bind(this);
   },
   
-  editNode: function(e) { // edit node
-        if ( !this.state.editNode )
-        {
-            e.preventDefault();
-            this.beginEditingNode();
-        }
+    editNode: function(e) { // edit node
+        e.preventDefault();
+        this.beginEditingNode();
     },
     
     addNode: function(e) { // add new node
-        if ( !this.state.editNode )
-        {
-            e.preventDefault();
-            this.beginAddingNode();
-        }
+        e.preventDefault();
+        this.beginAddingNode();
     },
     
     deleteNode: function(e) { // delete node
-        if ( !this.state.editNode )
-        {
-            var centralNode = _.find(node_data, function(c) { return c.id == this.state.selectedNode; }.bind(this));  
         
-            // find nodes where centralNode is a child
-            var parents = _.filter(node_data, function(n) {
-                // return TRUE if n.children contains centralNode.id
-                return _.indexOf(n.children, centralNode.id) != -1;
-                });
-
-            parents.forEach(function(parent) {
-                _.pull(parent.children, centralNode.id);
-            });
-            
-            _.pull(node_data, centralNode);
-
-            this.setState({
-                selectedNode: parents[0].id
-            });
-                
-            e.preventDefault();
-        }
+        e.preventDefault();    
+        
+        var deletedNode = this.state.selectedNode;
+        
+        this.setState({
+            selectedNode: this.getFlux().store('GraphStore').getParents(deletedNode)[0].id
+        });
+        
+        this.getFlux().actions.deleteNode(deletedNode);
     },
   
   getKeyBindings: function() { 
@@ -217,29 +171,18 @@ module.exports = React.createClass({
   },
   
   beginEditingNode: function() {
-    var centralNode = _.find(node_data, function(c) { return c.id == this.state.selectedNode; }.bind(this));  
     this.setState({
         editNode: true,
-        editingNodeId: centralNode.id
+        editingNodeId: this.state.selectedNode
     });
   },
   
   
   beginAddingNode: function() {
     
-    var centralNode = _.find(node_data, function(c) { return c.id == this.state.selectedNode; }.bind(this));  
-    
-    var newNode = {
-        id: guid(),
-        name: '',
-    };
-    
-    node_data.push(newNode);
-    centralNode.children.push(newNode.id);
-    
     this.setState({
         editNode: true,
-        editingNodeId: newNode.id
+        editingNodeId: guid()
     });
   },
   
@@ -250,24 +193,30 @@ module.exports = React.createClass({
       },
 
     saveAndClose: function(newNode) {
-        var editedNode = _.find(node_data, function(c) { return c.id == newNode.id; }.bind(this));
-        editedNode.name = newNode.name;
+        this.getFlux().actions.saveNode(newNode);
         this.setState({
             editNode: false,
-            selectedNode: editedNode.id
+            selectedNode: newNode.id
         });
     },
+    
+  newNode: function(id)
+  {
+    return {
+        id: id,
+        parent: this.state.selectedNode
+    };
+  },
   
   render: function () {
-
-    var nodes = this.renderNodes(node_data, this.state.selectedNode);
+  
+    var nodes = this.renderNodes(this.getFlux().store('GraphStore').getRelatedNodes(this.state.selectedNode), this.state.selectedNode);
     var lines = renderLines(nodes);
-    var editingNode = _.find(node_data, function(c) { return c.id == this.state.editingNodeId; }.bind(this));
         
     return (
       <div className='home-page'>
         {this.state.editNode ? <EditNodePanel
-            node={editingNode}
+            node={this.getFlux().store('GraphStore').getNode(this.state.editingNodeId) || this.newNode(this.state.editingNodeId)}
             onClose={this.handleClose}
             onSave={this.saveAndClose}
             /> : null }

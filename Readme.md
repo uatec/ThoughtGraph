@@ -8,7 +8,7 @@
 - ~~Edit the label of a node~~
 - ~~Add another node~~
 - ~~Delete a node~~
-- Persist Data (client side)
+- ~~Persist Data (client side)~~
 
 ###Mile Stone 1 - Usability###
 - Keyboard Shortcuts

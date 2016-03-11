@@ -7,7 +7,7 @@ var mui = require('material-ui'),
 var _ = require('lodash');
 
   
-module.exports = React.createClass({
+module.exports = EditNodePanel = React.createClass({
 
     propTypes: {
         node: React.PropTypes.object.isRequired,
@@ -45,7 +45,6 @@ module.exports = React.createClass({
     },
     
     componentDidMount: function() {
-        console.log('component did mount, focusing on text box');
         this.refs.labelText.focus();
     },
 

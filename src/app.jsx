@@ -4,6 +4,28 @@ var ReactDOM = require('react-dom');
 var mui = require('material-ui');
 var injectTapEventPlugin = require("react-tap-event-plugin");
 
+var GraphStore = require('./stores/GraphStore.js');
+
+
+var Fluxxor = require('Fluxxor');
+
+var stores = {
+    GraphStore: new GraphStore()
+};
+
+var actions = {
+    saveNode: function(node)
+    {
+        this.dispatch('SAVE_NODE', node);
+    },
+    deleteNode: function(deletedNodeId)
+    {
+        this.dispatch('DELETE_NODE', {deletedNodeId: deletedNodeId});
+    }
+};
+
+var flux = new Fluxxor.Flux(stores, actions);
+
 // A lot of the code is auto-generated. However, fiddling around with it
 // shouldn't be a catastrophic failure. Just that you'd need to know your way
 // around a little. However, **BE CAREFUL WHILE DELETING SOME OF THE COMMENTS IN
@@ -70,7 +92,7 @@ var Master = React.createClass({
   },
   render: function () {
     return (
-      <AppCanvas predefinedLayout={1}>
+      <AppCanvas  predefinedLayout={1}>
 
         <AppBar
           className="mui-dark-theme"
@@ -99,4 +121,9 @@ var routes = (
   </Route>
 );
 
-ReactDOM.render(<Router history={router.browserHistory}>{routes}</Router>, document.body);
+function createElement(Component, props) {
+  // make sure you pass all the props in!
+  return <Component {...props} flux={flux} />
+}
+
+ReactDOM.render(<Router createElement={createElement} history={router.browserHistory} >{routes}</Router>, document.body);
