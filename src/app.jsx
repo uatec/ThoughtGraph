@@ -32,7 +32,7 @@ var flux = new Fluxxor.Flux(stores, actions);
 // THIS FILE; THE AUTO-GENERATORS RELY ON SOME OF THEM**.
 
 // inject:pagerequire
-var HomePage = require('./pages/HomePage');
+var HomePage = require('./pages/HomePage.jsx');
 // endinject
 
 var titles = {
@@ -127,3 +127,13 @@ function createElement(Component, props) {
 }
 
 ReactDOM.render(<Router createElement={createElement} history={router.browserHistory} >{routes}</Router>, document.body);
+
+
+// CLI helper functions
+
+window.ThoughtGraph = {
+  resetDB: function() {
+    window.localStorage.removeItem('graph');    
+    window.location = window.location;
+  }
+};

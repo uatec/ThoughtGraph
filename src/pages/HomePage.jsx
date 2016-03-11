@@ -1,16 +1,17 @@
 var React = require('react');
 
-var SVG = require('../../components/svg');
+var SVG = require('../components/svg');
 
 var Image = SVG.Image;
 var Circle = SVG.Circle;
 var Line = SVG.Line;
 
-var Node = require('./Node.jsx');
+var Node = require('../components/Node/Node.jsx');
+var EditNodePanel = require('../components/Node/EditNodePanel.jsx');
+
 
 var _ = require('lodash');
 
-var EditNodePanel = require('./EditNodePanel.jsx');
 
 var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React),
