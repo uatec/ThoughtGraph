@@ -5,7 +5,7 @@
 - ~~View the node's parents~~
 - ~~View the node's children~~
 - ~~Click to focus on another node~~
-- Edit the label of a node
+- ~~Edit the label of a node~~
 - Add another node
 - Delete a node
 - Persist Data (client side)

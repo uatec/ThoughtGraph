@@ -10,6 +10,13 @@ var Node = require('./Node.jsx');
 
 var _ = require('lodash');
 
+var EditNodePanel = require('./EditNodePanel.jsx');
+
+var mui = require('material-ui'),
+     FlatButton = mui.FlatButton,
+     TextField = mui.TextField,
+     Dialog = mui.Dialog;
+
 // If you are going to be using stores, be sure to first load in the `Fluxxor`
 // module.
 //
@@ -46,12 +53,12 @@ var _ = require('lodash');
 
 
 var node_data = [
-    {name: "Matthew", children: [ "Mark", "Luke" ]}, 
-    {name: "Mark"}, 
-    {name: "Luke", children: ["John", "Peter", "Lionel"]}, 
-    {name: "John"}, 
-    {name: "Peter"}, 
-    {name: "Lionel"}
+    {id: 0, name: "Matthew", children: [ 1, 2 ]}, 
+    {id: 1, name: "Mark"}, 
+    {id: 2, name: "Luke", children: [3, 4, 5]}, 
+    {id: 3, name: "John"}, 
+    {id: 4, name: "Peter"}, 
+    {id: 5, name: "Lionel"}
     ];
 
 function renderLines(nodes)
@@ -60,16 +67,18 @@ function renderLines(nodes)
     var x = 10;
     return _.flatMap(nodes, function(n) {
         x += 10;
-        return _.map(n.props.data.children, function(childName) {
-            var child = _.find(nodes, function(c) { return c.props.data.name == childName; });
-            if ( child == null ) { return null; } // if the child isn't present, we shouldn't render a link to it
+        return _.map(n.props.data.children, function(childId) {
+            var child = _.find(nodes, function(c) { return c.props.data.id == childId; });
+            
+            if ( child === null || child === undefined ) { return null; } // if the child isn't present, we shouldn't render a link to it
             
             var start = n.props.x + ',' + n.props.y;
             var startCP = n.props.x + ',' + (n.props.y + 100);
             var endCP = child.props.x + ',' + (child.props.y - 100);
             var end = child.props.x + ',' + child.props.y;
+            var pathString = 'M' + start + ' C' + startCP + ' ' + endCP + ' ' + end;
             
-            return <path d={'M' + start + ' C' + startCP + ' ' + endCP + ' ' + end} stroke="blue" strokeWidth="2" fill="none" />;
+            return <path d={pathString} stroke="blue" strokeWidth="2" fill="none" />;
         });   
     }).filter(function(n) { return n != null; });
 }
@@ -78,62 +87,122 @@ module.exports = React.createClass({
 
     renderNodes: function (nodes, centralNodeName)
     {
-        var centralNode = _.find(nodes, function(c) { return c.name == centralNodeName; });
+        var centralNode = _.find(nodes, function(c) { return c.id == centralNodeName; });
         var circles = [];
         var parents = [];
         var children = [];
         _.forEach(nodes, function(n) {
             if ( n == centralNode ) { return ; } // skip the central node, we've already assigned it
             
-            if ( _.find(n.children || [], function(c) { return c == centralNode.name; } ) )// if this node is a parent of the central node
+            if ( _.find(n.children || [], function(c) { return c == centralNode.id; } ) )// if this node is a parent of the central node
             {
-                parents.push(<Node y={250} data={n} label={n.name} onClick={this.selectNode.bind(this, n)} />);    
+                parents.push(n);    
             }
             
-            if ( _.find(centralNode.children || [], function(c) { return c == n.name; }) ) // if this node is a child of the central node
+            if ( _.find(centralNode.children || [], function(c) { return c == n.id; }) ) // if this node is a child of the central node
             {
-                children.push(<Node y={750} data={n} label={n.name} onClick={this.selectNode.bind(this, n)}/>);            
+                children.push(n);            
             }
         }.bind(this));
+        var output = [];
         
-        circles.push(<Node x={500} y={500} data={centralNode} label={centralNode.name}/>);
+        output.push(<Node key={centralNode.id} x={500} y={500} data={centralNode} label={centralNode.name}/>);
+        
         
         var x = 500 - (750/2);
         var parentSpacing = 750/parents.length;
         
-        parents.forEach(function(p, i) {
-            p.props.x = x + (parentSpacing * (i + 1))/2;
-        });
+        parents.forEach(function(n, i) {
+            output.push(<Node key={n.id} y={250} x={x + (parentSpacing * (i + 1))/2} data={n} label={n.name} onClick={this.selectNode.bind(this, n)} />);
+        }.bind(this));
         
         var childSpacing = 750/children.length;
         
-        children.forEach(function(p, i) {
-            p.props.x = x + (childSpacing * (i + 1))/2;
-        });
+        children.forEach(function(n, i) {
+            output.push(<Node key={n.id} y={750} x={x + (childSpacing * (i + 1))/2} data={n} label={n.name} onClick={this.selectNode.bind(this, n)}/>);            
+        }.bind(this));
         
-        return _.concat(circles, parents, children); 
+        return output; 
   },
   
   getInitialState: function()
   {
     return {
-        selectedNode: "Luke"
-        };
+        selectedNode: 2,
+        editNode: false
+    };
   },
-  
   
   selectNode: function(selectedNode) {
     this.setState({
-        selectedNode: selectedNode.name
-        });
+        selectedNode: selectedNode.id
+    });
   },
   
+  componentDidMount: function() {
+    document.onkeypress = function(e) {
+        e = e || window.event;
+        var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
+        if (charCode) {
+            if ( String.fromCharCode(charCode) == 'e' )
+            {
+                if ( !this.state.editNode )
+                {
+                    e.preventDefault();
+                    this.beginEditingNode();
+                }
+            }
+        }
+    }.bind(this);
+  },
+  
+  componentWillUnmount: function() {
+    document.onkeypress = null;
+  },
+  
+  beginEditingNode: function() {
+    var centralNode = _.find(node_data, function(c) { return c.id == this.state.selectedNode; }.bind(this));  
+    this.setState({
+        editNode: true,
+        editingNodeName: centralNode.name
+    });
+  },
+  
+  handleClose: function() {
+    this.setState({
+        editNode: false
+        });
+      },
+
+    saveAndClose: function(newNode) {
+        var centralNode = _.find(node_data, function(c) { return c.id == this.state.selectedNode; }.bind(this));
+        centralNode.name = newNode.name;
+        this.setState({
+            editNode: false,
+            selectedNode: centralNode.id
+        });
+    },
+
+  
   render: function () {
+
+    
     var nodes = this.renderNodes(node_data, this.state.selectedNode);
     var lines = renderLines(nodes);
-
+    var centralNode = _.find(node_data, function(c) { return c.id == this.state.selectedNode; }.bind(this));
+        
     return (
       <div className='home-page'>
+      <FlatButton
+        label="Edit"
+        secondary={true}
+        onTouchTap={this.beginEditingNode}
+      />
+        {this.state.editNode ? <EditNodePanel
+            node={centralNode}
+            onClose={this.handleClose}
+            onSave={this.saveAndClose}
+            /> : null }
         <Image>
             {lines}
             {nodes}

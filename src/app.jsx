@@ -1,5 +1,6 @@
 var React = require('react');
-var Router = require('react-router');
+var router = require('react-router');
+var ReactDOM = require('react-dom');
 var mui = require('material-ui');
 var injectTapEventPlugin = require("react-tap-event-plugin");
 
@@ -12,21 +13,16 @@ var injectTapEventPlugin = require("react-tap-event-plugin");
 var HomePage = require('./pages/HomePage');
 // endinject
 
-var menuItems = [
-  // inject:menuitems
-  { payload: 'home', text: 'reactmaterialui' },
-  // endinject
-];
-
 var titles = {
   // inject:titles
   '/home': 'reactmaterialui',
   // endinject
 };
 
-var Route = Router.Route;
-var DefaultRoute = Router.DefaultRoute;
-var RouteHandler = Router.RouteHandler;
+var Router = router.Router;
+var Route = router.Route;
+var IndexRoute = router.IndexRoute;
+var RouteHandler = router.RouteHandler;
 
 var AppCanvas = mui.AppCanvas;
 var AppBar = mui.AppBar;
@@ -46,10 +42,9 @@ var LeftNavComponent = React.createClass({
       <LeftNav
         ref="leftNav"
         docked={false}
-        isInitiallyOpen={false}
-        menuItems={this.props.menuItems}
-        onClick={this._onLeftNavChange}
-        onChange={this._onLeftNavChange} />
+        isInitiallyOpen={false}>
+        {this.props.children}
+        </LeftNav>
     );
   },
 
@@ -79,15 +74,17 @@ var Master = React.createClass({
 
         <AppBar
           className="mui-dark-theme"
-          title={titles[this.getPath()]}
+          title={titles[this.props.location.pathname]}
           onMenuIconButtonTouchTap={this._onMenuIconButtonTouchTap}
           zDepth={0}>
         </AppBar>
 
-        <LeftNavComponent ref='leftNav' menuItems={menuItems} />
+        <LeftNavComponent ref='leftNav'>
+            Nav Element
+        </LeftNavComponent>
 
         <div className='mui-app-content-canvas'>
-          <RouteHandler />
+          {this.props.children}
         </div>
 
       </AppCanvas>
@@ -96,14 +93,14 @@ var Master = React.createClass({
 });
 
 var routes = (
-  <Route name='app' path='/' handler={Master}>
-    {/* inject:route */}
-    <Route name='home' handler={HomePage} />
-    {/* endinject */}
-    <DefaultRoute handler={HomePage} />
+  <Route name='app' path='/' component={Master}>
+    <Route name='home' component={HomePage} />
+    <IndexRoute component={HomePage} />
   </Route>
 );
 
-Router.run(routes, function (Handler) {
-  React.render(<Handler />, document.body);
-});
+// Router.run(routes, function (Handler) {
+//   React.render(<Handler />, document.body);
+// });
+  
+ReactDOM.render(<Router history={router.browserHistory}>{routes}</Router>, document.body);
