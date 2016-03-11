@@ -56,7 +56,7 @@ function renderLines(nodes)
     }).filter(function(n) { return n != null; });
 }
 
-module.exports = React.createClass({
+module.exports = HomePage = React.createClass({
 
     mixins: [FluxMixin, StoreWatchMixin('GraphStore'), GlobalKeyHookMixin],
     
@@ -90,18 +90,17 @@ module.exports = React.createClass({
         
         output.push(<Node key={centralNode.id} x={500} y={500} data={centralNode} label={centralNode.name}/>);
         
-        
         var x = 500 - (750/2);
         var parentSpacing = 750/parents.length;
         
         parents.forEach(function(n, i) {
-            output.push(<Node key={n.id} y={250} x={x + (parentSpacing * (i + 1))/2} data={n} label={n.name} onClick={this.selectNode.bind(this, n)} />);
+            output.push(<Node key={n.id} y={250} x={x + (parentSpacing * (i + 1))/2} data={n} label={n.name} onClick={this.focusNode.bind(this, n)} />);
         }.bind(this));
         
         var childSpacing = 750/children.length;
         
         children.forEach(function(n, i) {
-            output.push(<Node key={n.id} y={750} x={x + (childSpacing * (i + 1))/2} data={n} label={n.name} onClick={this.selectNode.bind(this, n)}/>);            
+            output.push(<Node key={n.id} y={750} x={x + (childSpacing * (i + 1))/2} data={n} label={n.name} onClick={this.focusNode.bind(this, n)}/>);            
         }.bind(this));
         
         return output; 
@@ -111,13 +110,15 @@ module.exports = React.createClass({
   {
     return {
         selectedNode: 2,
+        focussedNode: 2,
         editNode: false
     };
   },
   
-  selectNode: function(selectedNode) {
+  focusNode: function(focussedNode) {
     this.setState({
-        selectedNode: selectedNode.id
+        focussedNode: focussedNode.id,
+        selectedNode: focussedNode.id
     });
   },
 
@@ -135,10 +136,10 @@ module.exports = React.createClass({
         
         e.preventDefault();    
         
-        var deletedNode = this.state.selectedNode;
+        var deletedNode = this.state.focussedNode;
         
         this.setState({
-            selectedNode: this.getFlux().store('GraphStore').getParents(deletedNode)[0].id
+            focussedNode: this.getFlux().store('GraphStore').getParents(deletedNode)[0].id
         });
         
         this.getFlux().actions.deleteNode(deletedNode);
@@ -153,19 +154,53 @@ module.exports = React.createClass({
   },
   
   getMetaKeyBindings: function() { 
-    return {};
+    return {
+        38: this.moveSelectionUp,
+        40: this.moveSelectionDown,
+        37: this.moveSelectionLeft,
+        39: this.moveSelectionRight,
+        13: this.focusNode.bind(this, {id: this.state.selectedNode})
+    };
+  },
+  
+  moveSelectionUp: function() {
+      // if we are currently on a child, select focussed node
+      // if we are currently on a parent do nothing
+      // if we are currently on the focussed node, move to parent
+  },
+  moveSelectionDown: function() {
+      // if we are currently on a child, do nothing
+      // if we are currently on a parent, move to focussed node
+      // if we are corrently on the focussed node, move to child
+  },
+  moveSelectionLeft: function() {
+      // if we are currently on a child, 
+        // get our position
+        // if we are not furthest left, move left
+      // if we are currently on a parent
+        // get our position
+        // if we not the furthest left, move left
+      // if we are corrently on the focussed node, do nothing      
+  },
+  moveSelectionRight: function() {
+      // if we are currently on a child, 
+        // get our position
+        // if we are not furthest right, move right
+      // if we are currently on a parent
+        // get our position
+        // if we not the furthest right, move right
+      // if we are corrently on the focussed node, do nothing      
   },
   
   beginEditingNode: function() {
     this.setState({
         editNode: true,
-        editingNodeId: this.state.selectedNode
+        editingNodeId: this.state.focussedNode
     });
   },
   
   
   beginAddingNode: function() {
-    
     this.setState({
         editNode: true,
         editingNodeId: guid()
@@ -182,7 +217,7 @@ module.exports = React.createClass({
         this.getFlux().actions.saveNode(newNode);
         this.setState({
             editNode: false,
-            selectedNode: newNode.id
+            focussedNode: newNode.id
         });
     },
     
@@ -190,15 +225,18 @@ module.exports = React.createClass({
   {
     return {
         id: id,
-        parent: this.state.selectedNode
+        parent: this.state.focussedNode
     };
   },
   
   render: function () {
   
-    var nodes = this.renderNodes(this.getFlux().store('GraphStore').getRelatedNodes(this.state.selectedNode), this.state.selectedNode);
+    var nodes = this.renderNodes(this.getFlux().store('GraphStore').getRelatedNodes(this.state.focussedNode), this.state.focussedNode);
     var lines = renderLines(nodes);
-        
+   
+    var highlightedNode = _.find(nodes, function(n) { return n.props.data.id == this.state.selectedNode; }.bind(this));
+    var selectHighlight = <circle cx={highlightedNode.props.x} cy={highlightedNode.props.y} r="50" stroke="green" fill="none" />;
+
     return (
       <div className='home-page'>
         {this.state.editNode ? <EditNodePanel
@@ -209,6 +247,7 @@ module.exports = React.createClass({
         <Image>
             {lines}
             {nodes}
+            {selectHighlight}
         </Image>
         <div>
             <FlatButton
@@ -233,3 +272,12 @@ module.exports = React.createClass({
 
 });
 
+
+
+/*
+
+    Focussed Node => node that is at the centre of the current display
+    Selected Node => node that is currently highlighted and all keyboard actions refer to
+
+
+*/
