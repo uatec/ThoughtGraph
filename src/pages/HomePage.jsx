@@ -17,6 +17,8 @@ var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React),
     StoreWatchMixin = Fluxxor.StoreWatchMixin;
     
+var GlobalKeyHookMixin = require('../mixins/GlobalKeyHookMixin.js');
+    
 var mui = require('material-ui'),
      FlatButton = mui.FlatButton,
      TextField = mui.TextField,
@@ -56,7 +58,7 @@ function renderLines(nodes)
 
 module.exports = React.createClass({
 
-    mixins: [FluxMixin, StoreWatchMixin('GraphStore')],
+    mixins: [FluxMixin, StoreWatchMixin('GraphStore'), GlobalKeyHookMixin],
     
     getStateFromFlux: function() {
         var flux = this.getFlux();
@@ -118,24 +120,7 @@ module.exports = React.createClass({
         selectedNode: selectedNode.id
     });
   },
-  
-  componentDidMount: function() {
-    document.onkeypress = function(e) {
-    
-        if ( !this.state.editNode ) {
-            e = e || window.event;
-            var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
-            if (charCode) {
-                var key = String.fromCharCode(charCode);
-                if ( key in this.getKeyBindings() )
-                {
-                    this.getKeyBindings()[key].bind(this)(e);
-                }
-            }
-        }
-    }.bind(this);
-  },
-  
+
     editNode: function(e) { // edit node
         e.preventDefault();
         this.beginEditingNode();
@@ -167,8 +152,8 @@ module.exports = React.createClass({
     }
   },
   
-  componentWillUnmount: function() {
-    document.onkeypress = null;
+  getMetaKeyBindings: function() { 
+    return {};
   },
   
   beginEditingNode: function() {

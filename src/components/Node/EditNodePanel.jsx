@@ -6,15 +6,29 @@ var mui = require('material-ui'),
     
 var _ = require('lodash');
 
+var GlobalKeyHookMixin = require('../../mixins/GlobalKeyHookMixin.js');
+
   
 module.exports = EditNodePanel = React.createClass({
-
+    mixins: [GlobalKeyHookMixin],
+    
     propTypes: {
         node: React.PropTypes.object.isRequired,
         onSave: React.PropTypes.func.isRequired,
         onClose: React.PropTypes.func.isRequired
     },
 
+    getKeyBindings: function() { 
+        return { };
+    },
+    
+    getMetaKeyBindings: function() { 
+        return {
+            27: this.handleCancel,
+            13: this.handleOK
+        };
+    },
+    
     getInitialState: function() {
         return {
             labelText: this.props.node.name,
