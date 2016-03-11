@@ -164,18 +164,42 @@ module.exports = React.createClass({
   },
   
   keyBindings: {
-    e: function(e) {
+    e: function(e) { // edit node
         if ( !this.state.editNode )
         {
             e.preventDefault();
             this.beginEditingNode();
         }
     },
-    a: function(e) {
+    a: function(e) { // add new node
         if ( !this.state.editNode )
         {
             e.preventDefault();
             this.beginAddingNode();
+        }
+    },
+    d: function(e) { // delete node
+        if ( !this.state.editNode )
+        {
+            var centralNode = _.find(node_data, function(c) { return c.id == this.state.selectedNode; }.bind(this));  
+        
+            // find nodes where centralNode is a child
+            var parents = _.filter(node_data, function(n) {
+                // return TRUE if n.children contains centralNode.id
+                return _.indexOf(n.children, centralNode.id) != -1;
+                });
+
+            parents.forEach(function(parent) {
+                _.pull(parent.children, centralNode.id);
+            });
+            
+            _.pull(node_data, centralNode);
+
+            this.setState({
+                selectedNode: parents[0].id
+            });
+                
+            e.preventDefault();
         }
     }
   },
