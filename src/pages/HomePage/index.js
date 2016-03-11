@@ -155,30 +155,31 @@ module.exports = React.createClass({
         var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
         if (charCode) {
             var key = String.fromCharCode(charCode);
-            if ( key in this.keyBindings )
+            if ( key in this.getKeyBindings() )
             {
-                this.keyBindings[key].bind(this)(e);
+                this.getKeyBindings()[key].bind(this)(e);
             }
         }
     }.bind(this);
   },
   
-  keyBindings: {
-    e: function(e) { // edit node
+  editNode: function(e) { // edit node
         if ( !this.state.editNode )
         {
             e.preventDefault();
             this.beginEditingNode();
         }
     },
-    a: function(e) { // add new node
+    
+    addNode: function(e) { // add new node
         if ( !this.state.editNode )
         {
             e.preventDefault();
             this.beginAddingNode();
         }
     },
-    d: function(e) { // delete node
+    
+    deleteNode: function(e) { // delete node
         if ( !this.state.editNode )
         {
             var centralNode = _.find(node_data, function(c) { return c.id == this.state.selectedNode; }.bind(this));  
@@ -201,6 +202,13 @@ module.exports = React.createClass({
                 
             e.preventDefault();
         }
+    },
+  
+  getKeyBindings: function() { 
+    return {
+        e: this.editNode,
+        a: this.addNode,
+        d: this.deleteNode
     }
   },
   
@@ -258,11 +266,6 @@ module.exports = React.createClass({
         
     return (
       <div className='home-page'>
-      <FlatButton
-        label="Edit"
-        secondary={true}
-        onTouchTap={this.beginEditingNode}
-      />
         {this.state.editNode ? <EditNodePanel
             node={editingNode}
             onClose={this.handleClose}
@@ -272,6 +275,23 @@ module.exports = React.createClass({
             {lines}
             {nodes}
         </Image>
+        <div>
+            <FlatButton
+                label="[a] Add"
+                secondary={true}
+                onTouchTap={this.addNode}
+            />
+            <FlatButton
+                label="[e] Edit"
+                secondary={true}
+                onTouchTap={this.editNode}
+            />
+            <FlatButton
+                label="[d] Delete"
+                secondary={true}
+                onTouchTap={this.deleteNode}
+            />
+        </div>
       </div>
     );
   }
