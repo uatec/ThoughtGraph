@@ -1,3 +1,14 @@
+
+// CLI helper functions
+
+window.ThoughtGraph = {
+  resetDB: function() {
+    window.localStorage.removeItem('graph');    
+    window.location = window.location;
+  }
+};
+
+
 var React = require('react');
 var router = require('react-router');
 var ReactDOM = require('react-dom');
@@ -128,12 +139,3 @@ function createElement(Component, props) {
 
 ReactDOM.render(<Router createElement={createElement} history={router.browserHistory} >{routes}</Router>, document.body);
 
-
-// CLI helper functions
-
-window.ThoughtGraph = {
-  resetDB: function() {
-    window.localStorage.removeItem('graph');    
-    window.location = window.location;
-  }
-};
