@@ -31,6 +31,7 @@
 - Types
 - Filter view by type
 - Recover forgotten nodes
+- Lists
 
 ###Mile Stone 4 - Experience###
 - Styles
