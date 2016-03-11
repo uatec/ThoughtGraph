@@ -16,6 +16,16 @@ var mui = require('material-ui'),
      FlatButton = mui.FlatButton,
      TextField = mui.TextField,
      Dialog = mui.Dialog;
+     
+function guid() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
 
 // If you are going to be using stores, be sure to first load in the `Fluxxor`
 // module.
@@ -54,11 +64,11 @@ var mui = require('material-ui'),
 
 var node_data = [
     {id: 0, name: "Matthew", children: [ 1, 2 ]}, 
-    {id: 1, name: "Mark"}, 
+    {id: 1, name: "Mark", children: []}, 
     {id: 2, name: "Luke", children: [3, 4, 5]}, 
-    {id: 3, name: "John"}, 
-    {id: 4, name: "Peter"}, 
-    {id: 5, name: "Lionel"}
+    {id: 3, name: "John", children: []}, 
+    {id: 4, name: "Peter", children: []}, 
+    {id: 5, name: "Lionel", children: []}
     ];
 
 function renderLines(nodes)
@@ -144,17 +154,32 @@ module.exports = React.createClass({
         e = e || window.event;
         var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
         if (charCode) {
-            if ( String.fromCharCode(charCode) == 'e' )
+            var key = String.fromCharCode(charCode);
+            if ( key in this.keyBindings )
             {
-                if ( !this.state.editNode )
-                {
-                    e.preventDefault();
-                    this.beginEditingNode();
-                }
+                this.keyBindings[key].bind(this)(e);
             }
         }
     }.bind(this);
   },
+  
+  keyBindings: {
+    e: function(e) {
+        if ( !this.state.editNode )
+        {
+            e.preventDefault();
+            this.beginEditingNode();
+        }
+    },
+    a: function(e) {
+        if ( !this.state.editNode )
+        {
+            e.preventDefault();
+            this.beginAddingNode();
+        }
+    }
+  },
+  
   
   componentWillUnmount: function() {
     document.onkeypress = null;
@@ -164,7 +189,26 @@ module.exports = React.createClass({
     var centralNode = _.find(node_data, function(c) { return c.id == this.state.selectedNode; }.bind(this));  
     this.setState({
         editNode: true,
-        editingNodeName: centralNode.name
+        editingNodeId: centralNode.id
+    });
+  },
+  
+  
+  beginAddingNode: function() {
+    
+    var centralNode = _.find(node_data, function(c) { return c.id == this.state.selectedNode; }.bind(this));  
+    
+    var newNode = {
+        id: guid(),
+        name: '',
+    };
+    
+    node_data.push(newNode);
+    centralNode.children.push(newNode.id);
+    
+    this.setState({
+        editNode: true,
+        editingNodeId: newNode.id
     });
   },
   
@@ -175,21 +219,19 @@ module.exports = React.createClass({
       },
 
     saveAndClose: function(newNode) {
-        var centralNode = _.find(node_data, function(c) { return c.id == this.state.selectedNode; }.bind(this));
-        centralNode.name = newNode.name;
+        var editedNode = _.find(node_data, function(c) { return c.id == newNode.id; }.bind(this));
+        editedNode.name = newNode.name;
         this.setState({
             editNode: false,
-            selectedNode: centralNode.id
+            selectedNode: editedNode.id
         });
     },
-
   
   render: function () {
 
-    
     var nodes = this.renderNodes(node_data, this.state.selectedNode);
     var lines = renderLines(nodes);
-    var centralNode = _.find(node_data, function(c) { return c.id == this.state.selectedNode; }.bind(this));
+    var editingNode = _.find(node_data, function(c) { return c.id == this.state.editingNodeId; }.bind(this));
         
     return (
       <div className='home-page'>
@@ -199,7 +241,7 @@ module.exports = React.createClass({
         onTouchTap={this.beginEditingNode}
       />
         {this.state.editNode ? <EditNodePanel
-            node={centralNode}
+            node={editingNode}
             onClose={this.handleClose}
             onSave={this.saveAndClose}
             /> : null }

@@ -6,14 +6,13 @@
 - ~~View the node's children~~
 - ~~Click to focus on another node~~
 - ~~Edit the label of a node~~
-- Add another node
+- ~~Add another node~~
 - Delete a node
 - Persist Data (client side)
 
 ###Mile Stone 1 - Usability###
 - Keyboard Shortcuts
  - Navigate Graph
- - Edit Node
 - Searching
 - Add arbitrary links to searched nodes
 - Remove arbitrary links
@@ -28,3 +27,4 @@
 - Attachments
 - Types
 - Filter view by type
+- Recover forgotten nodes

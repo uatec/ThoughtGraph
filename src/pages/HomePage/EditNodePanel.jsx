@@ -3,14 +3,16 @@ var mui = require('material-ui'),
     Dialog = mui.Dialog;
     FlatButton = mui.FlatButton;
     TextField = mui.TextField;
+    
+var _ = require('lodash');
 
   
 module.exports = React.createClass({
 
     propTypes: {
-        node: React.PropTypes.object,
-        onSave: React.PropTypes.func,
-        onClose: React.PropTypes.func
+        node: React.PropTypes.object.required,
+        onSave: React.PropTypes.func.required,
+        onClose: React.PropTypes.func.required
     },
 
     getInitialState: function() {
@@ -21,9 +23,11 @@ module.exports = React.createClass({
 
     handleOK: function() {
         if ( this.props.onSave ) {
-            this.props.onSave({
-                name: this.state.labelText
-            });
+            
+            var newNode = _.clone(this.props.node);
+            newNode.name = this.state.labelText;
+
+            this.props.onSave(newNode);
         }
     },
     
