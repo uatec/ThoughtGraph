@@ -37,3 +37,12 @@
 - Styles
 - Animations
 - Expanding Visible Sector
+
+###Mile Stone 5 - Integration###
+- Secrets
+- Share to ThoughGraph
+ - From Chrome, Safari
+
+###Mile Stone 6 - Mobile###
+- iOS
+- Android
