@@ -33,6 +33,7 @@ module.exports = GraphStore = Fluxxor.createStore({
             this.nodes[newNode.parent].children.push(newNode.id);
             delete newNode.parent;
             this.nodes[newNode.id] = newNode;
+            newNode.children = newNode.children || [];
         }
  
         window.localStorage.setItem('graph', JSON.stringify(this.nodes));
@@ -77,5 +78,33 @@ module.exports = GraphStore = Fluxxor.createStore({
     
     getParents: function(nodeId) {
         return _.filter(this.nodes, function(n) { return _.indexOf(n.children, nodeId) != -1 });
+    },
+    
+    getGraph: function(starterNodeId, steps, index, parent, child) {
+    
+        index = index || {};
+        
+        if ( starterNodeId in index ) return index[starterNode];
+        
+        var starterNode = index[starterNodeId] = _.clone(this.nodes[starterNodeId]);
+        starterNode.score = steps;
+        if ( steps > 0 ) {
+            var starterNodeChildren = starterNode.children.map(function(c) {
+                return this.getGraph(c, steps - 1, index, starterNode);
+            }.bind(this));
+        
+            starterNode.children = starterNodeChildren;
+            
+            var starterNodeParents = this.getParents(starterNodeId).map(function(c) {
+                return this.getGraph(c.id, steps - 1, index, null, starterNode);
+            }.bind(this));
+        
+            starterNode.parents = starterNodeParents;
+        } else { 
+            starterNode.children = child ? [child] : [];
+            starterNode.parents = parent ? [parent] : [];
+        }
+        
+        return starterNode;
     }
 });

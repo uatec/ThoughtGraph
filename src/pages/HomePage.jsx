@@ -34,6 +34,7 @@ function guid() {
     s4() + '-' + s4() + s4() + s4();
 }
 
+
 function renderLines(nodes)
 {
     var lineList = [];
@@ -60,12 +61,70 @@ module.exports = HomePage = React.createClass({
 
     mixins: [FluxMixin, StoreWatchMixin('GraphStore'), GlobalKeyHookMixin],
     
+    renderGraphLines: function(n)
+    {
+        console.log('rendering lines', n.props.parents.length);
+        return n.props.parents.map(function(p){ 
+                  console.log('rendering line to parent');
+            var start = n.props.x + ',' + n.props.y;
+            var startCP = n.props.x + ',' + (n.props.y - 100);
+            var endCP = p.props.x + ',' + (p.props.y + 100);
+            var end = p.props.x + ',' + p.props.y;
+            var pathString = 'M' + start + ' C' + startCP + ' ' + endCP + ' ' + end;
+            // return 'x';
+            return <path key={n.props.label + '->' + p.props.label} d={pathString} stroke="#00BCD6" strokeWidth="2" fill="none" />;
+        }).concat(n.props.children.map(function(p){ 
+                  console.log('rendering line to children');
+            var start = n.props.x + ',' + n.props.y;
+            var startCP = n.props.x + ',' + (n.props.y + 100);
+            var endCP = p.props.x + ',' + (p.props.y - 100);
+            var end = p.props.x + ',' + p.props.y;
+            var pathString = 'M' + start + ' C' + startCP + ' ' + endCP + ' ' + end;
+            // return 'x';
+            return <path key={n.props.label + '->' + p.props.label} d={pathString} stroke="#00BCD6" strokeWidth="2" fill="none" />;
+        }));
+       
+    },
+    
     getStateFromFlux: function() {
         var flux = this.getFlux();
         return {
             x: guid(),
         };
     },
+    
+    renderNode: function(node, x, y) {
+        return <Node key={node.id} x={x} y={y} data={node} label={node.name} onClick={this.focusNode.bind(this, node)} />;
+    },
+    
+    renderGraph: function(node)
+    {
+        var centre = {x: 500, y: 500};
+        var x = 0;  
+        var x2 = 0;
+        var parents = node.parents.map(function(p) {
+                return this.renderNode(p, x += 100, 250);
+                            
+             }.bind(this));
+             
+             var children = 
+                node.children.map(function(c) {
+                    return this.renderNode(c, x += 100, 750);
+                }.bind(this));
+                
+                
+        return [<Node key={node.id} x={centre.x} y={centre.y} data={node} label={node.name} parents={parents} children={children} />]
+            .concat(
+             parents//,
+            ).concat( children
+            )
+            // node.children.map(function(c) {
+            
+        //}
+        ;
+    },
+
+    
 
     renderNodes: function (nodes, centralNodeName)
     {
@@ -230,13 +289,14 @@ module.exports = HomePage = React.createClass({
   },
   
   render: function () {
-  
-    var nodes = this.renderNodes(this.getFlux().store('GraphStore').getRelatedNodes(this.state.focussedNode), this.state.focussedNode);
-    var lines = renderLines(nodes);
+    var nodes = this.renderGraph(this.getFlux().store('GraphStore').getGraph(this.state.focussedNode, 1));
+  //  var nodes = this.renderNodes(this.getFlux().store('GraphStore').getRelatedNodes(this.state.focussedNode), this.state.focussedNode);
+    //var lines = renderLines(nodes);
    
+   var lines = this.renderGraphLines(nodes[0]);
     var highlightedNode = _.find(nodes, function(n) { return n.props.data.id == this.state.selectedNode; }.bind(this));
     var selectHighlight = <circle cx={highlightedNode.props.x} cy={highlightedNode.props.y} r="50" stroke="green" fill="none" />;
-
+    console.log(lines);
     return (
       <div className='home-page'>
         {this.state.editNode ? <EditNodePanel
