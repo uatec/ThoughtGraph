@@ -1,23 +1,12 @@
 var React = require('react');
 
-module.exports = React.createClass({
+module.exports = Node = React.createClass({
     
   propTypes: {
       x: React.PropTypes.number,
       y: React.PropTypes.number,
       label: React.PropTypes.string,
       onClick: React.PropTypes.func
-  },
-  
-  enterEditMode: function()
-  {
-      this.setState({edit: true});
-  },
-  
-  getInitialState: function() {
-      return {
-          edit: false
-      };
   },
   
   render: function () {
