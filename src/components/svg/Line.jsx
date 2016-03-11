@@ -1,6 +1,6 @@
 var React = require('react');
 
-module.exports = React.createClass({
+module.exports = Line = React.createClass({
     
   propTypes: {
       x1: React.PropTypes.number,

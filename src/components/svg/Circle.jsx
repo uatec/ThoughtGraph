@@ -1,6 +1,6 @@
 var React = require('react');
 
-module.exports = React.createClass({
+module.exports = Circle = React.createClass({
   propTypes: {
       x: React.PropTypes.number,
       y: React.PropTypes.number
