@@ -88,7 +88,7 @@ function renderLines(nodes)
             var end = child.props.x + ',' + child.props.y;
             var pathString = 'M' + start + ' C' + startCP + ' ' + endCP + ' ' + end;
             
-            return <path d={pathString} stroke="blue" strokeWidth="2" fill="none" />;
+            return <path d={pathString} stroke="#00BCD6" strokeWidth="2" fill="none" />;
         });   
     }).filter(function(n) { return n != null; });
 }
@@ -179,7 +179,6 @@ module.exports = React.createClass({
         }
     }
   },
-  
   
   componentWillUnmount: function() {
     document.onkeypress = null;

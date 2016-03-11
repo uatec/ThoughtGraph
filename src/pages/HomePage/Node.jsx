@@ -11,7 +11,7 @@ module.exports = Node = React.createClass({
   
   render: function () {
     return <g onClick={this.props.onClick}>      
-        <circle cx={this.props.x} cy={this.props.y} r="5" fill="orange" />
+        <circle cx={this.props.x} cy={this.props.y} r="5" fill="#FF4585" />
         <text x={this.props.x+10} y={this.props.y+5}>{this.props.label}</text>
     </g>;
   }
