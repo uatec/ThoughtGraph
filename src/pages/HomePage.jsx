@@ -34,29 +34,6 @@ function guid() {
     s4() + '-' + s4() + s4() + s4();
 }
 
-
-function renderLines(nodes)
-{
-    var lineList = [];
-    var x = 10;
-    return _.flatMap(nodes, function(n) {
-        x += 10;
-        return _.map(n.props.data.children, function(childId) {
-            var child = _.find(nodes, function(c) { return c.props.data.id == childId; });
-            
-            if ( child === null || child === undefined ) { return null; } // if the child isn't present, we shouldn't render a link to it
-            
-            var start = n.props.x + ',' + n.props.y;
-            var startCP = n.props.x + ',' + (n.props.y + 100);
-            var endCP = child.props.x + ',' + (child.props.y - 100);
-            var end = child.props.x + ',' + child.props.y;
-            var pathString = 'M' + start + ' C' + startCP + ' ' + endCP + ' ' + end;
-            
-            return <path key={n.props.data.id + '->' + child.props.data.id} d={pathString} stroke="#00BCD6" strokeWidth="2" fill="none" />;
-        });   
-    }).filter(function(n) { return n != null; });
-}
-
 module.exports = HomePage = React.createClass({
 
     mixins: [FluxMixin, StoreWatchMixin('GraphStore'), GlobalKeyHookMixin],
@@ -125,46 +102,6 @@ module.exports = HomePage = React.createClass({
     },
 
     
-
-    renderNodes: function (nodes, centralNodeName)
-    {
-        var centralNode = _.find(nodes, function(c) { return c.id == centralNodeName; });
-        var circles = [];
-        var parents = [];
-        var children = [];
-        _.forEach(nodes, function(n) {
-            if ( n == centralNode ) { return ; } // skip the central node, we've already assigned it
-            
-            if ( _.find(n.children || [], function(c) { return c == centralNode.id; } ) )// if this node is a parent of the central node
-            {
-                parents.push(n);    
-            }
-            
-            if ( _.find(centralNode.children || [], function(c) { return c == n.id; }) ) // if this node is a child of the central node
-            {
-                children.push(n);            
-            }
-        }.bind(this));
-        var output = [];
-        
-        output.push(<Node key={centralNode.id} x={500} y={500} data={centralNode} label={centralNode.name}/>);
-        
-        var x = 500 - (750/2);
-        var parentSpacing = 750/parents.length;
-        
-        parents.forEach(function(n, i) {
-            output.push(<Node key={n.id} y={250} x={x + (parentSpacing * (i + 1))/2} data={n} label={n.name} onClick={this.focusNode.bind(this, n)} />);
-        }.bind(this));
-        
-        var childSpacing = 750/children.length;
-        
-        children.forEach(function(n, i) {
-            output.push(<Node key={n.id} y={750} x={x + (childSpacing * (i + 1))/2} data={n} label={n.name} onClick={this.focusNode.bind(this, n)}/>);            
-        }.bind(this));
-        
-        return output; 
-  },
-  
   getInitialState: function()
   {
     return {
@@ -223,7 +160,7 @@ module.exports = HomePage = React.createClass({
   },
   
   moveSelectionUp: function() {
-      // if we are currently on a child, select focussed node
+      // if we are currently on a child, select focussed noded
       // if we are currently on a parent do nothing
       // if we are currently on the focussed node, move to parent
   },
@@ -290,8 +227,6 @@ module.exports = HomePage = React.createClass({
   
   render: function () {
     var nodes = this.renderGraph(this.getFlux().store('GraphStore').getGraph(this.state.focussedNode, 1));
-  //  var nodes = this.renderNodes(this.getFlux().store('GraphStore').getRelatedNodes(this.state.focussedNode), this.state.focussedNode);
-    //var lines = renderLines(nodes);
    
    var lines = this.renderGraphLines(nodes[0]);
     var highlightedNode = _.find(nodes, function(n) { return n.props.data.id == this.state.selectedNode; }.bind(this));
