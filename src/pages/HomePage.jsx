@@ -55,7 +55,7 @@ function findNodeInDirection(nodeCollection, origin, angleInRadians, pointFuncto
     var nodesWithPoints = nodeCollection.map(function(n) {
         var point = pointFunctor(n);
         var vectorToPoint = pointsToVector(point, origin);
-        if ( vectorToPoint.x == 0 && vectorToPoint.y == 0 )
+        if ( vectorToPoint.x === 0 && vectorToPoint.y === 0 )
         {
             return { 
                 node: n, 

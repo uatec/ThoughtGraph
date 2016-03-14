@@ -24,7 +24,7 @@ var paths = {
 };
 
 // Here is where we will be sending all our files to.
-var destPath = './build'
+var destPath = './build';
 
 /*
  * Handles an error event.
