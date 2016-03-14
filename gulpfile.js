@@ -76,7 +76,6 @@ gulp.task('style', function () {
  * Bundles the scripts, using Browserify.
  */
 gulp.task('js', function() {
-console.log('building js');
   return browserify(paths.appjs)
     .transform(reactify)
     .bundle()
