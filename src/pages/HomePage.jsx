@@ -34,15 +34,62 @@ function guid() {
     s4() + '-' + s4() + s4() + s4();
 }
 
+function pointsToVector(P1, P2) {
+    return { x: P2.x - P1.x, y: P2.y - P1.y };
+}
+
+function vectorToRadians(vector)
+{
+    var angle = Math.atan2(vector.y, vector.x);
+    return angle < 0 ? angle + (Math.PI * 2) : angle;
+}
+
+function vectorLength(vector)
+{
+    return Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+}
+
+
+function findNodeInDirection(nodeCollection, origin, angleInRadians, pointFunctor, scoreFunctor)
+{
+    var nodesWithPoints = nodeCollection.map(function(n) {
+        var point = pointFunctor(n);
+        var vectorToPoint = pointsToVector(point, origin);
+        if ( vectorToPoint.x == 0 && vectorToPoint.y == 0 )
+        {
+            return { 
+                node: n, 
+                score: NaN
+            };
+        }
+        var distanceToPoint = vectorLength(vectorToPoint);
+        var angleToPoint = vectorToRadians(vectorToPoint);
+        var score = scoreFunctor(angleToPoint, distanceToPoint);
+        return {
+            node: n,
+            score: score,
+            angleToPoint: angleToPoint,
+            distanceToPoint: distanceToPoint
+        };
+    });
+
+    var highest = nodesWithPoints[0];
+    nodesWithPoints.forEach(function(element) {
+        if ( isNaN(highest.score) || element.score < highest.score ) {
+            highest = element;
+        }
+    }, this);
+    if ( isNaN(highest.score) ) return null;
+    return highest.node;
+}
+
 module.exports = HomePage = React.createClass({
 
     mixins: [FluxMixin, StoreWatchMixin('GraphStore'), GlobalKeyHookMixin],
     
     renderGraphLines: function(n)
     {
-        console.log('rendering lines', n.props.parents.length);
         return n.props.parents.map(function(p){ 
-                  console.log('rendering line to parent');
             var start = n.props.x + ',' + n.props.y;
             var startCP = n.props.x + ',' + (n.props.y - 100);
             var endCP = p.props.x + ',' + (p.props.y + 100);
@@ -51,7 +98,6 @@ module.exports = HomePage = React.createClass({
             // return 'x';
             return <path key={n.props.label + '->' + p.props.label} d={pathString} stroke="#00BCD6" strokeWidth="2" fill="none" />;
         }).concat(n.props.children.map(function(p){ 
-                  console.log('rendering line to children');
             var start = n.props.x + ',' + n.props.y;
             var startCP = n.props.x + ',' + (n.props.y + 100);
             var endCP = p.props.x + ',' + (p.props.y - 100);
@@ -71,7 +117,7 @@ module.exports = HomePage = React.createClass({
     },
     
     renderNode: function(node, x, y) {
-        return <Node key={node.id} x={x} y={y} data={node} label={node.name} onClick={this.focusNode.bind(this, node)} />;
+        return <Node key={node.id} x={x} y={y} data={node} label={node.id + ' - ' + node.name} onClick={this.focusNode.bind(this, node)} />;
     },
     
     renderGraph: function(node)
@@ -90,7 +136,7 @@ module.exports = HomePage = React.createClass({
                 }.bind(this));
                 
                 
-        return [<Node key={node.id} x={centre.x} y={centre.y} data={node} label={node.name} parents={parents} children={children} />]
+        return [<Node key={node.id} x={centre.x} y={centre.y} data={node} label={node.id + ' - ' + node.name} parents={parents} children={children} />]
             .concat(
              parents//,
             ).concat( children
@@ -159,33 +205,41 @@ module.exports = HomePage = React.createClass({
     };
   },
   
+  moveSelector: function(vector)
+  {
+      var pointExtractor = function(n) { return {x: n.props.x, y: n.props.y}; };
+      var targetAngle = vectorToRadians(vector);
+      var angleCoefficient = 100* (2 * Math.PI);
+      var distanceCoefficient = 1;
+//function findNodeInDirection(nodeCollection, origin, angleInRadians, pointFunctor, scoreFunctor)
+      var selectedNode = _.filter(this.renderedNodes, function(n) { return n.props.data.id == this.state.selectedNode; }.bind(this));
+      
+      var bestNode = findNodeInDirection(this.renderedNodes, pointExtractor(selectedNode[0]),
+        0, pointExtractor, function(angle, distance) { 
+            // score functor
+            if ( distance == 0 ) return NaN;
+            var angleDeviation = Math.abs(angle - targetAngle);
+            if ( angleDeviation > Math.PI / 2 ) return NaN;
+            return angleCoefficient * angleDeviation + distanceCoefficient * distance;
+        });
+      
+      if ( bestNode == null ) return;  
+      
+      this.setState({selectedNode: bestNode.props.data.id});
+  },
+  
+  
   moveSelectionUp: function() {
-      // if we are currently on a child, select focussed noded
-      // if we are currently on a parent do nothing
-      // if we are currently on the focussed node, move to parent
+    this.moveSelector({x: 0, y: 1});
   },
   moveSelectionDown: function() {
-      // if we are currently on a child, do nothing
-      // if we are currently on a parent, move to focussed node
-      // if we are corrently on the focussed node, move to child
+    this.moveSelector({x: 0, y: -1});
   },
   moveSelectionLeft: function() {
-      // if we are currently on a child, 
-        // get our position
-        // if we are not furthest left, move left
-      // if we are currently on a parent
-        // get our position
-        // if we not the furthest left, move left
-      // if we are corrently on the focussed node, do nothing      
+    this.moveSelector({x: 1, y: 0});  
   },
   moveSelectionRight: function() {
-      // if we are currently on a child, 
-        // get our position
-        // if we are not furthest right, move right
-      // if we are currently on a parent
-        // get our position
-        // if we not the furthest right, move right
-      // if we are corrently on the focussed node, do nothing      
+    this.moveSelector({x: -1, y: 0});
   },
   
   beginEditingNode: function() {
@@ -226,12 +280,11 @@ module.exports = HomePage = React.createClass({
   },
   
   render: function () {
-    var nodes = this.renderGraph(this.getFlux().store('GraphStore').getGraph(this.state.focussedNode, 1));
+    this.renderedNodes = this.renderGraph(this.getFlux().store('GraphStore').getGraph(this.state.focussedNode, 1));
    
-   var lines = this.renderGraphLines(nodes[0]);
-    var highlightedNode = _.find(nodes, function(n) { return n.props.data.id == this.state.selectedNode; }.bind(this));
+    var lines = this.renderGraphLines(this.renderedNodes[0]);
+    var highlightedNode = _.find(this.renderedNodes, function(n) { return n.props.data.id == this.state.selectedNode; }.bind(this));
     var selectHighlight = <circle cx={highlightedNode.props.x} cy={highlightedNode.props.y} r="50" stroke="green" fill="none" />;
-    console.log(lines);
     return (
       <div className='home-page'>
         {this.state.editNode ? <EditNodePanel
@@ -241,7 +294,7 @@ module.exports = HomePage = React.createClass({
             /> : null }
         <Image>
             {lines}
-            {nodes}
+            {this.renderedNodes}
             {selectHighlight}
         </Image>
         <div>
