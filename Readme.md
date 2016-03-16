@@ -11,8 +11,8 @@
 - ~~Persist Data (client side)~~
 
 ###Mile Stone 1 - Usability###
-- Keyboard Shortcuts
- - Navigate Graph
+- ~~Keyboard Shortcuts~~
+ - ~~Navigate Graph~~
 - Searching
 - Add arbitrary links to searched nodes
 - Remove arbitrary links
