@@ -76,7 +76,7 @@ module.exports = EditNodePanel = React.createClass({
         ];
 
         return <Dialog
-                title="Dialog With Actions"
+                title="Edit thought"
                 modal={true}
                 actions={actions}
                 open={true}
