@@ -29,6 +29,12 @@ var actions = {
     {
         this.dispatch('LOCAL_QUERY_REQUESTED', queryString);  
     },
+    linkNode: function(from, to)
+    {
+        this.dispatch('LINK_NODE', {
+            from: from, 
+            to: to });
+    },
     saveNode: function(node)
     {
         this.dispatch('SAVE_NODE', node);

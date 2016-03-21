@@ -193,7 +193,8 @@ module.exports = HomePage = React.createClass({
         e: this.editNode,
         a: this.addNode,
         d: this.deleteNode,
-        f: this.beginSearch
+        f: this.beginSearch,
+        l: this.beginLinkNode
     }
   },
   
@@ -205,6 +206,26 @@ module.exports = HomePage = React.createClass({
         39: this.moveSelectionRight,
         13: this.focusNode.bind(this, {id: this.state.selectedNode})
     };
+  },
+  
+  beginLinkNode: function(e) {
+    e.preventDefault();
+    this.setState({
+        disableGlobalKeys: true,
+        showLink: true
+    })
+  },
+  
+  endLinkNode: function() {
+    this.setState({
+      disableGlobalKeys: false,
+      showLink: false  
+    });
+  },
+  
+  linkNode: function(linkTo)
+  {
+      this.getFlux().actions.linkNode(this.state.focussedNode, linkTo.id);
   },
   
   beginSearch: function(e) {
@@ -305,7 +326,8 @@ module.exports = HomePage = React.createClass({
     this.renderedNodes = this.renderGraph(visibleGraphEntryPoint);
    
     var lines = this.renderGraphLines(this.renderedNodes[0]);
-    var highlightedNode = _.find(this.renderedNodes, function(n) { return n.props.data.id == this.state.selectedNode; }.bind(this));
+    var highlightedNode = _.find(this.renderedNodes, function(n) { return n.props.data.id == this.state.selectedNode; }.bind(this)) 
+        || this.renderedNodes[0];
     var selectHighlight = <circle cx={highlightedNode.props.x} cy={highlightedNode.props.y} r="50" stroke="green" fill="none" />;
     return (
       <div className='home-page'>
@@ -316,7 +338,10 @@ module.exports = HomePage = React.createClass({
             /> : null }
         {this.state.showSearch ? <SearchPanel
             onClose={this.endSearch}
-            onItemFound={this.focusNode} />: null}
+            onItemFound={this.focusNode} /> : null}
+        {this.state.showLink ? <SearchPanel
+            onClose={this.endLinkNode}
+            onItemFound={this.linkNode} /> : null}
         <Image>
             {lines}
             {this.renderedNodes}
@@ -342,6 +367,11 @@ module.exports = HomePage = React.createClass({
                 label="[f] Search"
                 secondary={true}
                 onTouchTap={this.beginSearch}
+            />
+            <FlatButton
+                label="[l] Link Node"
+                secondary={true}
+                onTouchTap={this.beginLinkNode}
             />
         </div>
       </div>

@@ -13,9 +13,9 @@ function flatten(n) {
 
 function serialiseGraph(graphIndex) {
     var flattenedIndex = {};
-    graphIndex.forEach(function(n) {
-        flattenedIndex[n.id] = flatten(n);
-    });
+    for ( var key in graphIndex) {
+        flattenedIndex[key] = flatten(graphIndex[key]);
+    }
     return flattenedIndex;   
 }
 
@@ -38,6 +38,7 @@ function deserialiseGraph(hashMap) {
 module.exports = GraphStore = Fluxxor.createStore({
     actions: {
         "DELETE_NODE": "_deleteNode",
+        "LINK_NODE": "_linkNode",
         "SAVE_NODE": "_saveNode",
         "LOCAL_QUERY_REQUESTED": "queryLocalGraph"
     },
@@ -69,20 +70,34 @@ module.exports = GraphStore = Fluxxor.createStore({
         this.nodes = deserialiseGraph(JSON.parse(window.localStorage.getItem('graph')));
     },
     
+    _linkNode: function(event)
+    {
+        var fromNode = this.nodes[event.from];
+        var toNode = this.nodes[event.to];
+        
+        fromNode.children.push(toNode);
+        toNode.parents.push(fromNode);  
+
+        window.localStorage.setItem('graph', JSON.stringify(serialiseGraph(this.nodes)));
+
+        this.emit('change');        
+    },
+    
     _saveNode: function(newNode)
     {
         if ( newNode.id in this.nodes )
         {
              this.nodes[newNode.id].name = newNode.name;
         } else {
+            this.nodes[newNode.id] = newNode;
+            
             var parent = this.nodes[newNode.parent];
-            parent.children.push(newNode.id);
+            parent.children.push(newNode);
             delete newNode.parent;
             newNode.parents = [parent];
-            newNode.children = newNode.children.map(function(c) {
+            newNode.children = newNode.children ? newNode.children.map(function(c) {
                 return this.nodes[c];
-            });
-            this.nodes[newNode.id] = newNode;
+            }) : [];
         }
  
         window.localStorage.setItem('graph', JSON.stringify(serialiseGraph(this.nodes)));
@@ -95,13 +110,15 @@ module.exports = GraphStore = Fluxxor.createStore({
         
         var doomedNode = this.nodes[nodeToDelete];
         
-        for ( var parent in doomedNode.parents )
-        {
+        for ( var parentIdx in doomedNode.parents )
+        {  
+            var parent = doomedNode.parents[parentIdx];
             parent.children.splice(parent.children.indexOf(doomedNode), 1);
         }
 
-        for ( var child in doomedNode.children )
+        for ( var childIdx in doomedNode.children )
         {
+            var child = doomedNode.children[childIdx];
             child.parents.splice(child.parents.indexOf(doomedNode), 1);
         }
 

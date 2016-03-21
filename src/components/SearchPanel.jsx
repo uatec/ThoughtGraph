@@ -70,7 +70,7 @@ module.exports = EditNodePanel = React.createClass({
             foundNode = foundNode ? foundNode : firstNodeInList;
             console.log('found node', foundNode);
             if ( foundNode ) {
-                this.props.onItemFound(foundNode.data);
+                this.props.onItemFound(foundNode);
             }
         }
         if ( this.props.onClose )
