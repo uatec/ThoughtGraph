@@ -33,6 +33,8 @@
 - Filter view by type
 - Recover forgotten nodes
 - Lists
+- Events
+- Chronological Index
 
 ###Mile Stone 4 - Experience###
 - Styles
