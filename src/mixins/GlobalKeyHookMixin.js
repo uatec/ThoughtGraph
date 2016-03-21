@@ -1,7 +1,7 @@
 module.exports = GlobalKeyHookMixin = {
 
     globalKeyHandler: function(e) {
-        if ( !this.state.editNode ) {
+        if ( !this.state.disableGlobalKeys ) {
             e = e || window.event;
             var charCode = (typeof e.which == "number") ? e.which : e.keyCode;
             if (charCode) {
@@ -16,11 +16,13 @@ module.exports = GlobalKeyHookMixin = {
     
     globalMetaKeyHandler: function(e)
     {
-        if (!/[a-zA-Z0-9-_ ]/.test(String.fromCharCode(e.keyCode)))
-        {
-            if ( e.keyCode in this.getMetaKeyBindings() )
+        if ( !this.state.disableGlobalKeys ) {        
+            if (!/[a-zA-Z0-9-_ ]/.test(String.fromCharCode(e.keyCode)))
             {
-                this.getMetaKeyBindings()[e.keyCode]();
+                if ( e.keyCode in this.getMetaKeyBindings() )
+                {
+                    this.getMetaKeyBindings()[e.keyCode]();
+                }
             }
         }
     },

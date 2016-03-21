@@ -25,6 +25,10 @@ var stores = {
 };
 
 var actions = {
+    query: function(queryString)
+    {
+        this.dispatch('LOCAL_QUERY_REQUESTED', queryString);  
+    },
     saveNode: function(node)
     {
         this.dispatch('SAVE_NODE', node);

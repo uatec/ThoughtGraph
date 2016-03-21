@@ -1,42 +1,91 @@
 var Fluxxor = require('fluxxor');
 var _ = require('lodash');
 
+function flatten(n) {
+    var flattenedNode = {};
+    flattenedNode.id = n.id;
+    flattenedNode.name = n.name;
+    flattenedNode.parents = n.parents.map(function(p) { return p.id; });
+    flattenedNode.children = n.children.map(function(p) { return p.id; });
+    return flattenedNode;
+}
+
+
+function serialiseGraph(graphIndex) {
+    var flattenedIndex = {};
+    graphIndex.forEach(function(n) {
+        flattenedIndex[n.id] = flatten(n);
+    });
+    return flattenedIndex;   
+}
+
+function deserialiseGraph(hashMap) {
+    var graphIndex = _.clone(hashMap);
+    
+    var extractNodeById = function(c) {
+           return graphIndex[c]; 
+        };
+    
+    for ( var key in hashMap ) 
+    {
+        var node = graphIndex[key];
+        node.children = node.children.map(extractNodeById);
+        node.parents = node.parents.map(extractNodeById);
+    }
+    return graphIndex;   
+}
+
 module.exports = GraphStore = Fluxxor.createStore({
     actions: {
         "DELETE_NODE": "_deleteNode",
-        "SAVE_NODE": "_saveNode"
+        "SAVE_NODE": "_saveNode",
+        "LOCAL_QUERY_REQUESTED": "queryLocalGraph"
+    },
+    
+    getQueryResults: function() {
+        return this.queryResults;
+    },
+    
+    queryLocalGraph: function(queryString) {
+        var query = new RegExp(queryString, 'i');
+        
+        this.queryResults = _.filter(this.nodes, function(n) { return query.test(n.name); });
+        
+        this.emit('change');
     },
 
     initialize: function(options) {
         if ( !window.localStorage.getItem('graph' ) ) {
-            this.nodes = {
-                0: {id: 0, name: "Matthew", children: [ 1, 2 ]}, 
-                1: {id: 1, name: "Mark", children: []}, 
-                2: {id: 2, name: "Luke", children: [3, 4, 5]}, 
-                3: {id: 3, name: "John", children: []}, 
-                4: {id: 4, name: "Peter", children: []}, 
-                5: {id: 5, name: "Lionel", children: []}
+            var data = {
+                0: {id: 0, name: "Matthew", children: [ 1, 2 ], parents: []}, 
+                1: {id: 1, name: "Mark", children: [], parents: [0]}, 
+                2: {id: 2, name: "Luke", children: [3, 4, 5], parents: [0]}, 
+                3: {id: 3, name: "John", children: [], parents: [2]}, 
+                4: {id: 4, name: "Peter", children: [], parents: [2]}, 
+                5: {id: 5, name: "Lionel", children: [], parents: [2]}
             }; 
-            window.localStorage.setItem('graph', JSON.stringify(this.nodes));
-        } else { 
-            this.nodes = JSON.parse(window.localStorage.getItem('graph'));
-        }
+            window.localStorage.setItem('graph', JSON.stringify(data));
+        } 
+        this.nodes = deserialiseGraph(JSON.parse(window.localStorage.getItem('graph')));
     },
-
+    
     _saveNode: function(newNode)
     {
         if ( newNode.id in this.nodes )
         {
-             // node already exists, merge it (isn't merging stuff a bit 'actiony'?
              this.nodes[newNode.id].name = newNode.name;
         } else {
-            this.nodes[newNode.parent].children.push(newNode.id);
+            var parent = this.nodes[newNode.parent];
+            parent.children.push(newNode.id);
             delete newNode.parent;
+            newNode.parents = [parent];
+            newNode.children = newNode.children.map(function(c) {
+                return this.nodes[c];
+            });
             this.nodes[newNode.id] = newNode;
-            newNode.children = newNode.children || [];
         }
  
-        window.localStorage.setItem('graph', JSON.stringify(this.nodes));
+        window.localStorage.setItem('graph', JSON.stringify(serialiseGraph(this.nodes)));
 
         this.emit('change');
     },
@@ -46,65 +95,61 @@ module.exports = GraphStore = Fluxxor.createStore({
         
         var doomedNode = this.nodes[nodeToDelete];
         
-        // find nodes where doomedNode is a child
-        var parents = _.filter(this.nodes, function(n) {
-            // return TRUE if n.children contains doomedNode.id
-            return _.indexOf(n.children, nodeToDelete) != -1;
-        });
+        for ( var parent in doomedNode.parents )
+        {
+            parent.children.splice(parent.children.indexOf(doomedNode), 1);
+        }
 
-        parents.forEach(function(parent) {
-            _.pull(parent.children, nodeToDelete);
-        });
+        for ( var child in doomedNode.children )
+        {
+            child.parents.splice(child.parents.indexOf(doomedNode), 1);
+        }
 
         delete this.nodes[nodeToDelete];
 
-        window.localStorage.setItem('graph', JSON.stringify(this.nodes));
+        window.localStorage.setItem('graph', JSON.stringify(serialiseGraph(this.nodes)));
         this.emit('change');
     },
     
-    getRelatedNodes: function(focussedNodeId)
+    getRelatedNodes: function(focussedNodeId, distance, newIndex)
     {  
-        var focussedNode = this.nodes[focussedNodeId];
-        return [focussedNode]
-            .concat(this.getParents(focussedNodeId)) // find parents
-            .concat(_.map(focussedNode.children, function(nid) { return this.nodes[nid];}.bind(this)))
-            ;
+        newIndex = newIndex || {};
+        
+        if ( focussedNodeId in newIndex ) {
+            return newIndex[focussedNodeId];
+        }
+        
+        if ( distance === 0 ) { 
+            return flatten(this.nodes[focussedNodeId]);
+        }
+       
+        
+        var thisNode = flatten(this.nodes[focussedNodeId]);
+        
+        newIndex[thisNode.id] = thisNode;
+        
+        thisNode.parents = thisNode.parents.map(function(p) {
+           if ( typeof p === 'object' ) return p; // if we're looping back on ourselves andd we've already created this object
+           var parent = this.getRelatedNodes(p, distance-1, newIndex);
+           parent.children = _.pull(parent.children, p);
+           parent.children.push(thisNode);
+           return newIndex[p] = parent;
+        }.bind(this));
+
+        thisNode.children = thisNode.children.map(function(c) {
+           if ( typeof c === 'object' ) return c; // if we're looping back on ourselves andd we've already created this object
+           var child = this.getRelatedNodes(c, distance-1, newIndex);
+           child.parents = _.pull(child.parents, c);
+           child.parents.push(thisNode);
+           return newIndex[c] = child;
+        }.bind(this));
+        
+        return thisNode;
     },
     
     getNode: function(nodeId)
     {
         return this.nodes[nodeId];
-    },
-    
-    getParents: function(nodeId) {
-        return _.filter(this.nodes, function(n) { return _.indexOf(n.children, nodeId) != -1 });
-    },
-    
-    getGraph: function(starterNodeId, steps, index, parent, child) {
-    
-        index = index || {};
-        
-        if ( starterNodeId in index ) return index[starterNode];
-        
-        var starterNode = index[starterNodeId] = _.clone(this.nodes[starterNodeId]);
-        starterNode.score = steps;
-        if ( steps > 0 ) {
-            var starterNodeChildren = starterNode.children.map(function(c) {
-                return this.getGraph(c, steps - 1, index, starterNode);
-            }.bind(this));
-        
-            starterNode.children = starterNodeChildren;
-            
-            var starterNodeParents = this.getParents(starterNodeId).map(function(c) {
-                return this.getGraph(c.id, steps - 1, index, null, starterNode);
-            }.bind(this));
-        
-            starterNode.parents = starterNodeParents;
-        } else { 
-            starterNode.children = child ? [child] : [];
-            starterNode.parents = parent ? [parent] : [];
-        }
-        
-        return starterNode;
     }
+    
 });

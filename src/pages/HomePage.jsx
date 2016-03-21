@@ -8,7 +8,7 @@ var Line = SVG.Line;
 
 var Node = require('../components/Node/Node.jsx');
 var EditNodePanel = require('../components/Node/EditNodePanel.jsx');
-
+var SearchPanel = require('../components/SearchPanel.jsx');
 
 var _ = require('lodash');
 
@@ -153,7 +153,8 @@ module.exports = HomePage = React.createClass({
     return {
         selectedNode: 2,
         focussedNode: 2,
-        editNode: false
+        editNode: false,
+        disableGlobalKeys: false
     };
   },
   
@@ -181,7 +182,7 @@ module.exports = HomePage = React.createClass({
         var deletedNode = this.state.focussedNode;
         
         this.setState({
-            focussedNode: this.getFlux().store('GraphStore').getParents(deletedNode)[0].id
+            focussedNode: this.getFlux().store('GraphStore').getNode(deletedNode).parents[0].id
         });
         
         this.getFlux().actions.deleteNode(deletedNode);
@@ -191,7 +192,8 @@ module.exports = HomePage = React.createClass({
     return {
         e: this.editNode,
         a: this.addNode,
-        d: this.deleteNode
+        d: this.deleteNode,
+        f: this.beginSearch
     }
   },
   
@@ -203,6 +205,21 @@ module.exports = HomePage = React.createClass({
         39: this.moveSelectionRight,
         13: this.focusNode.bind(this, {id: this.state.selectedNode})
     };
+  },
+  
+  beginSearch: function(e) {
+    e.preventDefault();
+    this.setState({
+        disableGlobalKeys: true,
+        showSearch: true
+    });    
+  },
+  
+  endSearch: function() {
+    this.setState({
+      disableGlobalKeys: false,
+      showSearch: false  
+    });
   },
   
   moveSelector: function(vector)
@@ -245,6 +262,7 @@ module.exports = HomePage = React.createClass({
   beginEditingNode: function() {
     this.setState({
         editNode: true,
+        disableGlobalKeys: true,
         editingNodeId: this.state.focussedNode
     });
   },
@@ -253,12 +271,14 @@ module.exports = HomePage = React.createClass({
   beginAddingNode: function() {
     this.setState({
         editNode: true,
+        disableGlobalKeys: true,
         editingNodeId: guid()
     });
   },
   
   handleClose: function() {
     this.setState({
+        disableGlobalKeys: false,
         editNode: false
         });
       },
@@ -266,6 +286,7 @@ module.exports = HomePage = React.createClass({
     saveAndClose: function(newNode) {
         this.getFlux().actions.saveNode(newNode);
         this.setState({
+            disableGlobalKeys: false,
             editNode: false,
             focussedNode: newNode.id
         });
@@ -280,7 +301,8 @@ module.exports = HomePage = React.createClass({
   },
   
   render: function () {
-    this.renderedNodes = this.renderGraph(this.getFlux().store('GraphStore').getGraph(this.state.focussedNode, 1));
+    var visibleGraphEntryPoint = this.getFlux().store('GraphStore').getRelatedNodes(this.state.focussedNode, 1);
+    this.renderedNodes = this.renderGraph(visibleGraphEntryPoint);
    
     var lines = this.renderGraphLines(this.renderedNodes[0]);
     var highlightedNode = _.find(this.renderedNodes, function(n) { return n.props.data.id == this.state.selectedNode; }.bind(this));
@@ -292,6 +314,9 @@ module.exports = HomePage = React.createClass({
             onClose={this.handleClose}
             onSave={this.saveAndClose}
             /> : null }
+        {this.state.showSearch ? <SearchPanel
+            onClose={this.endSearch}
+            onItemFound={this.focusNode} />: null}
         <Image>
             {lines}
             {this.renderedNodes}
@@ -312,6 +337,11 @@ module.exports = HomePage = React.createClass({
                 label="[d] Delete"
                 secondary={true}
                 onTouchTap={this.deleteNode}
+            />
+            <FlatButton
+                label="[f] Search"
+                secondary={true}
+                onTouchTap={this.beginSearch}
             />
         </div>
       </div>
