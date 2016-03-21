@@ -18,7 +18,6 @@
 - Remove arbitrary links
 - Host as stand alone application (electron)
 - Friend link type
-- Transition Animations
 
 ###Mile Stone 2 - Integration###
 - Export whole graph
