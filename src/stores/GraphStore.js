@@ -7,6 +7,7 @@ function flatten(n) {
     flattenedNode.name = n.name;
     flattenedNode.parents = n.parents.map(function(p) { return p.id; });
     flattenedNode.children = n.children.map(function(p) { return p.id; });
+    flattenedNode.siblings = n.siblings.map(function(p) { return p.id; });
     return flattenedNode;
 }
 
@@ -31,6 +32,7 @@ function deserialiseGraph(hashMap) {
         var node = graphIndex[key];
         node.children = node.children.map(extractNodeById);
         node.parents = node.parents.map(extractNodeById);
+        node.siblings = node.siblings ? node.siblings.map(extractNodeById) : [];
     }
     return graphIndex;   
 }
@@ -55,7 +57,8 @@ module.exports = GraphStore = Fluxxor.createStore({
             to.parents.splice(to.parents.indexOf(from), 1); // remove 'from' as a parent of 'to'
             from.children.splice(from.children.indexOf(to), 1); // remove 'to' as a child of from'
         } else {
-            // do siblings?
+            to.siblings.splice(to.siblings.indexOf(from), 1); // remove 'from' as a siblings of 'to'
+            from.siblings.splice(from.siblings.indexOf(to), 1); // remove 'to' as a siblings of from'
         }
         
         window.localStorage.setItem('graph', JSON.stringify(serialiseGraph(this.nodes)));
@@ -106,7 +109,9 @@ module.exports = GraphStore = Fluxxor.createStore({
                 toNode.parents.push(fromNode);  
                 break;
             case 'sibling':
-                throw new Error('Cannot add link as sibling, siblings not implemented yet');
+                fromNode.siblings.push(toNode);
+                toNode.siblings.push(fromNode);
+                break;
         }
 
         window.localStorage.setItem('graph', JSON.stringify(serialiseGraph(this.nodes)));
@@ -129,6 +134,7 @@ module.exports = GraphStore = Fluxxor.createStore({
             newNode.children = newNode.children ? newNode.children.map(function(c) {
                 return this.nodes[c];
             }) : [];
+            newNode.siblings = [];
         }
  
         window.localStorage.setItem('graph', JSON.stringify(serialiseGraph(this.nodes)));
@@ -151,6 +157,12 @@ module.exports = GraphStore = Fluxxor.createStore({
         {
             var child = doomedNode.children[childIdx];
             child.parents.splice(child.parents.indexOf(doomedNode), 1);
+        }
+
+        for ( var siblingIdx in doomedNode.siblings )
+        {
+            var sibling = doomedNode.siblings[siblingIdx];
+            sibling.siblings.splice(sibling.siblings.indexOf(doomedNode), 1);
         }
 
         delete this.nodes[nodeToDelete];
@@ -190,6 +202,14 @@ module.exports = GraphStore = Fluxxor.createStore({
            child.parents = _.pull(child.parents, c);
            child.parents.push(thisNode);
            return newIndex[c] = child;
+        }.bind(this));
+        
+        thisNode.siblings = thisNode.siblings.map(function(s) {
+            if ( typeof s === 'object' ) return s; // if we're looping back on ourselves and we've already created this object
+            var sibling = this.getRelatedNodes(s, distance -1, newIndex);
+            sibling.siblings = _.pull(sibling.siblings, s);
+            sibling.siblings.push(thisNode);
+            return newIndex[s] = sibling;
         }.bind(this));
         
         return thisNode;

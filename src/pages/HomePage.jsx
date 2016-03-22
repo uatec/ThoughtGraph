@@ -105,6 +105,14 @@ module.exports = HomePage = React.createClass({
             var pathString = 'M' + start + ' C' + startCP + ' ' + endCP + ' ' + end;
             // return 'x';
             return <path key={n.props.label + '->' + p.props.label} d={pathString} stroke="#00BCD6" strokeWidth="2" fill="none" />;
+        })).concat(n.props.siblings.map(function(s) {
+            var start = n.props.x + ',' + n.props.y;
+            var startCP = (n.props.x + 100) + ',' + n.props.y;
+            var endCP = (s.props.x - 100) + ',' + s.props.y;
+            var end = s.props.x + ',' + s.props.y;
+            var pathString = 'M' + start + ' C' + startCP + ' ' + endCP + ' ' + end;
+            // return 'x';
+            return <path key={n.props.label + '->' + s.props.label} d={pathString} stroke="#00BCD6" strokeWidth="2" fill="none" />;
         }));
        
     },
@@ -117,28 +125,32 @@ module.exports = HomePage = React.createClass({
     },
     
     renderNode: function(node, x, y) {
-        return <Node key={node.id} x={x} y={y} data={node} label={node.id + ' - ' + node.name} onClick={this.focusNode.bind(this, node)} />;
+        return <Node key={node.id} x={x} y={y} data={node} label={node.name} onClick={this.focusNode.bind(this, node)} />;
     },
     
     renderGraph: function(node)
     {
         var centre = {x: 500, y: 500};
-        var x = 0;  
-        var x2 = 0;
+        var parentX = 0;  
+        var childX = 0;
+        var siblingY = 250;
+        
         var parents = node.parents.map(function(p) {
-                return this.renderNode(p, x += 100, 250);
-                            
-             }.bind(this));
-             
-             var children = 
-                node.children.map(function(c) {
-                    return this.renderNode(c, x += 100, 750);
-                }.bind(this));
+            return this.renderNode(p, parentX += 100, 250);
+        }.bind(this));
+
+        var children = node.children.map(function(c) {
+            return this.renderNode(c, childX += 100, 750);
+        }.bind(this));
+
+        var siblings = node.siblings.map(function(s) {
+            return this.renderNode(s, centre.x + 250, siblingY += 100);
+        }.bind(this));
                 
-                
-        return [<Node key={node.id} x={centre.x} y={centre.y} data={node} label={node.id + ' - ' + node.name} parents={parents} children={children} />]
+        return [<Node key={node.id} x={centre.x} y={centre.y} data={node} label={node.id + ' - ' + node.name} parents={parents} children={children} siblings={siblings} />]
             .concat(parents)
             .concat(children)
+            .concat(siblings)
         ;
     },
 
