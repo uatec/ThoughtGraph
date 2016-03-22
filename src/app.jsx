@@ -44,6 +44,13 @@ var actions = {
     deleteNode: function(deletedNodeId)
     {
         this.dispatch('DELETE_NODE', {deletedNodeId: deletedNodeId});
+    },
+    unlink: function(from, to)
+    {
+        this.dispatch('UNLINK_NODES', {
+            from: from,
+            to: to
+        });
     }
 };
 

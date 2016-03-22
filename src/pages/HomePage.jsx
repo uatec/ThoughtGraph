@@ -137,13 +137,8 @@ module.exports = HomePage = React.createClass({
                 
                 
         return [<Node key={node.id} x={centre.x} y={centre.y} data={node} label={node.id + ' - ' + node.name} parents={parents} children={children} />]
-            .concat(
-             parents//,
-            ).concat( children
-            )
-            // node.children.map(function(c) {
-            
-        //}
+            .concat(parents)
+            .concat(children)
         ;
     },
 
@@ -199,7 +194,17 @@ module.exports = HomePage = React.createClass({
         f: this.beginSearch,
         i: this.beginLinkNode.bind(this, 'parent'),
         k: this.beginLinkNode.bind(this, 'child'),
-        l: this.beginLinkNode.bind(this, 'sibling')
+        l: this.beginLinkNode.bind(this, 'sibling'),
+        u: this.unLinkNode
+    }
+  },
+  
+  unLinkNode: function() {
+    if ( this.state.focussedNode != this.state.selectedNode) {
+        this.getFlux().actions.unlink(this.state.focussedNode, this.state.selectedNode);
+        this.setState({
+            selectedNode: this.state.focussedNode
+        });
     }
   },
   
@@ -231,7 +236,7 @@ module.exports = HomePage = React.createClass({
   
   linkNode: function(linkTo)
   {
-      this.getFlux().actions.linkNode(this.state.focussedNode, linkTo.id, this.state.linkType);
+      this.getFlux().actions.linkNode(this.state.focussedNode, linkTo.id || linkTo.data.id, this.state.linkType);
   },
   
   beginSearch: function(e) {

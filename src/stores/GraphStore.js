@@ -40,8 +40,28 @@ module.exports = GraphStore = Fluxxor.createStore({
         "DELETE_NODE": "_deleteNode",
         "LINK_NODE": "_linkNode",
         "SAVE_NODE": "_saveNode",
-        "LOCAL_QUERY_REQUESTED": "queryLocalGraph"
+        "LOCAL_QUERY_REQUESTED": "queryLocalGraph",
+        "UNLINK_NODES": "_unlinkNodes"
     },
+    
+    _unlinkNodes: function(data) {
+        var from = this.nodes[data.from];
+        var to = this.nodes[data.to];
+        
+        if ( from.parents.indexOf(to) != -1 ) {// if 'to' is a parent of 'from'
+            from.parents.splice(from.parents.indexOf(to), 1); // remove 'to' as a parent of 'from'
+            to.children.splice(to.children.indexOf(from), 1); // remove 'from' as a child of 'to'
+        } else if ( to.parents.indexOf(from) != -1 ) {
+            to.parents.splice(to.parents.indexOf(from), 1); // remove 'from' as a parent of 'to'
+            from.children.splice(from.children.indexOf(to), 1); // remove 'to' as a child of from'
+        } else {
+            // do siblings?
+        }
+        
+        window.localStorage.setItem('graph', JSON.stringify(serialiseGraph(this.nodes)));
+        this.emit('change');
+    },
+    
     
     getQueryResults: function() {
         return this.queryResults;
