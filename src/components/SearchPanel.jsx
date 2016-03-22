@@ -68,7 +68,6 @@ module.exports = EditNodePanel = React.createClass({
             var foundNode = this.state.foundNode;
             var firstNodeInList = (this.state.dataSource && this.state.dataSource.length) ? this.state.dataSource[0] : null;
             foundNode = foundNode ? foundNode : firstNodeInList;
-            console.log('found node', foundNode);
             if ( foundNode ) {
                 this.props.onItemFound(foundNode);
             }
@@ -87,7 +86,6 @@ module.exports = EditNodePanel = React.createClass({
 
     changeQuery: function(query)
     {
-        console.log('querying for', query);
         this.getFlux().actions.query(query);
     },
     
