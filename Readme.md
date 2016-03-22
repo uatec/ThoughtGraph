@@ -15,7 +15,7 @@
  - ~~Navigate Graph~~
 - ~~Searching~~
 - Add arbitrary links to searched nodes
-- Remove arbitrary links
+- ~~Remove arbitrary links~~
 - Host as stand alone application (electron)
 - Friend link type
 
