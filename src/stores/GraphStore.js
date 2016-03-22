@@ -74,9 +74,20 @@ module.exports = GraphStore = Fluxxor.createStore({
     {
         var fromNode = this.nodes[event.from];
         var toNode = this.nodes[event.to];
+        var linkType = event.linkType;
         
-        fromNode.children.push(toNode);
-        toNode.parents.push(fromNode);  
+        switch ( linkType ) {
+            case 'parent':
+                fromNode.parents.push(toNode);
+                toNode.children.push(fromNode);
+                break;
+            case 'child':
+                fromNode.children.push(toNode);
+                toNode.parents.push(fromNode);  
+                break;
+            case 'sibling':
+                throw new Error('Cannot add link as sibling, siblings not implemented yet');
+        }
 
         window.localStorage.setItem('graph', JSON.stringify(serialiseGraph(this.nodes)));
 

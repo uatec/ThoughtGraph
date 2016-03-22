@@ -179,10 +179,13 @@ module.exports = HomePage = React.createClass({
         
         e.preventDefault();    
         
-        var deletedNode = this.state.focussedNode;
+        var deletedNode = this.state.selectedNode;
+        
+        var moveToNode = this.getFlux().store('GraphStore').getNode(deletedNode).parents[0].id;
         
         this.setState({
-            focussedNode: this.getFlux().store('GraphStore').getNode(deletedNode).parents[0].id
+            focussedNode: this.state.focussedNode == this.state.selectedNode ? moveToNode : this.state.focussedNode,
+            selectedNode: moveToNode
         });
         
         this.getFlux().actions.deleteNode(deletedNode);
@@ -194,7 +197,9 @@ module.exports = HomePage = React.createClass({
         a: this.addNode,
         d: this.deleteNode,
         f: this.beginSearch,
-        l: this.beginLinkNode
+        i: this.beginLinkNode.bind(this, 'parent'),
+        k: this.beginLinkNode.bind(this, 'child'),
+        l: this.beginLinkNode.bind(this, 'sibling')
     }
   },
   
@@ -208,11 +213,12 @@ module.exports = HomePage = React.createClass({
     };
   },
   
-  beginLinkNode: function(e) {
+  beginLinkNode: function(linkType, e) {
     e.preventDefault();
     this.setState({
         disableGlobalKeys: true,
-        showLink: true
+        showLink: true,
+        linkType: linkType
     })
   },
   
@@ -225,7 +231,7 @@ module.exports = HomePage = React.createClass({
   
   linkNode: function(linkTo)
   {
-      this.getFlux().actions.linkNode(this.state.focussedNode, linkTo.id);
+      this.getFlux().actions.linkNode(this.state.focussedNode, linkTo.id, this.state.linkType);
   },
   
   beginSearch: function(e) {
@@ -369,9 +375,19 @@ module.exports = HomePage = React.createClass({
                 onTouchTap={this.beginSearch}
             />
             <FlatButton
-                label="[l] Link Node"
+                label="[i] Link Parent Node"
                 secondary={true}
-                onTouchTap={this.beginLinkNode}
+                onTouchTap={this.beginLinkNode.bind(this, 'parent')}
+            />
+            <FlatButton
+                label="[k] Link Child Node"
+                secondary={true}
+                onTouchTap={this.beginLinkNode.bind(this, 'child')}
+            />
+            <FlatButton
+                label="[l] Link Sibling Node"
+                secondary={true}
+                onTouchTap={this.beginLinkNode.bind(this, 'sibling')}
             />
         </div>
       </div>
