@@ -419,6 +419,11 @@ module.exports = HomePage = React.createClass({
                 secondary={true}
                 onTouchTap={this.beginLinkNode.bind(this, 'sibling')}
             />
+            <FlatButton
+                label="[u] Unlink selected node"
+                secondary={true}
+                onTouchTap={this.unLinkNode}
+            />
         </div>
       </div>
     );
