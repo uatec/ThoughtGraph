@@ -1,4 +1,4 @@
-#Mind Graph#
+#Thought Graph#
 ## Road Map ##
 ###Mile Stone 0 - Basic###
 - ~~View a node~~
