@@ -16,8 +16,8 @@
 - ~~Searching~~
 - ~~Add arbitrary links to searched nodes~~
 - ~~Remove arbitrary links~~
-- Host as stand alone application (electron)
-- Friend link type
+- ~~Host as stand alone application (electron)~~
+- ~~Friend link type~~
 
 ###Mile Stone 2 - Integration###
 - Export whole graph
