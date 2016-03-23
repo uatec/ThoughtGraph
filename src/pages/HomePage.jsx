@@ -125,7 +125,7 @@ module.exports = HomePage = React.createClass({
     },
     
     renderNode: function(node, x, y) {
-        return <Node key={node.id} x={x} y={y} data={node} label={node.name} onClick={this.focusNode.bind(this, node)} />;
+        return <Node key={node.id} x={x} y={y} data={node} label={node.name} onClick={this.clickNode.bind(this, node)} />;
     },
     
     renderGraph: function(node)
@@ -147,7 +147,7 @@ module.exports = HomePage = React.createClass({
             return this.renderNode(s, centre.x + 250, siblingY += 100);
         }.bind(this));
                 
-        return [<Node key={node.id} x={centre.x} y={centre.y} data={node} label={node.id + ' - ' + node.name} parents={parents} children={children} siblings={siblings} />]
+        return [<Node key={node.id} x={centre.x} y={centre.y} data={node} label={node.id + ' - ' + node.name} onClick={this.clickNode.bind(this, node)} parents={parents} children={children} siblings={siblings} />]
             .concat(parents)
             .concat(children)
             .concat(siblings)
@@ -166,10 +166,23 @@ module.exports = HomePage = React.createClass({
   },
   
   focusNode: function(focussedNode) {
-    this.setState({
-        focussedNode: focussedNode.id,
-        selectedNode: focussedNode.id
-    });
+      this.setState({
+            focussedNode: focussedNode.id,
+            selectedNode: focussedNode.id
+        });
+  },
+  
+  clickNode: function(focussedNode) {
+    if ( this.state.selectedNode == focussedNode.id ) { // if we are already focussed on this node
+        this.setState({
+            focussedNode: focussedNode.id,
+            selectedNode: focussedNode.id
+        });
+    } else {
+        this.setState({
+            selectedNode: focussedNode.id
+        })
+    }
   },
 
     editNode: function(e) { // edit node
