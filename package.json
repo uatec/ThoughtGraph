@@ -7,7 +7,7 @@
   "scripts": {
     "server": "gulp develop",
     "test": "jest",
-    "pack": "rm -rf ./output && cp ./app/* ./build && ./node_modules/electron-packager/cli.js ./build Thought\\ Graph --out=./output --platform=all --arch=all --version=0.37.2"
+    "pack": "rm -rf ./output && cp ./app/* ./build && ./node_modules/electron-packager/cli.js ./build Thought\\ Graph --out=./output --platform=darwin,win32 --arch=all --version=0.37.2 && cd ./output && for i in */; do zip -r \"${i%/}.zip\" \"$i\"; done"
   },
   "devDependencies": {
     "browserify": "^6.3.3",
