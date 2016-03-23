@@ -1,5 +1,6 @@
 # Build directory
 build
+output
 
 # Copied styles for Material UI
 src/style/material-ui

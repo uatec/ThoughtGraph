@@ -8,7 +8,6 @@ window.ThoughtGraph = {
   }
 };
 
-
 var React = require('react');
 var router = require('react-router');
 var ReactDOM = require('react-dom');
@@ -124,16 +123,6 @@ var Master = React.createClass({
     return (
       <AppCanvas  predefinedLayout={1}>
 
-        <AppBar
-          className="mui-dark-theme"
-          title={titles[this.props.location.pathname]}
-          onMenuIconButtonTouchTap={this._onMenuIconButtonTouchTap}
-          zDepth={0}>
-        </AppBar>
-
-        <LeftNavComponent ref='leftNav'>
-            Nav Element
-        </LeftNavComponent>
 
         <div className='mui-app-content-canvas'>
           {this.props.children}
@@ -147,6 +136,7 @@ var Master = React.createClass({
 var routes = (
   <Route name='app' path='/' component={Master}>
     <Route name='home' component={HomePage} />
+    <Route name='index.html' path="*" component={HomePage} />
     <IndexRoute component={HomePage} />
   </Route>
 );
@@ -158,3 +148,14 @@ function createElement(Component, props) {
 
 ReactDOM.render(<Router createElement={createElement} history={router.browserHistory} >{routes}</Router>, document.body);
 
+
+        // <AppBar
+        //   className="mui-dark-theme"
+        //   title={titles[this.props.location.pathname]}
+        //   onMenuIconButtonTouchTap={this._onMenuIconButtonTouchTap}
+        //   zDepth={0}>
+        // </AppBar>
+
+        // <LeftNavComponent ref='leftNav'>
+        //     Nav Element
+        // </LeftNavComponent>
