@@ -17,6 +17,8 @@ var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React),
     StoreWatchMixin = Fluxxor.StoreWatchMixin;
     
+var IFrame = require('../components/IFrame.jsx');
+    
 var GlobalKeyHookMixin = require('../mixins/GlobalKeyHookMixin.js');
     
 var mui = require('material-ui'),
@@ -228,7 +230,8 @@ module.exports = HomePage = React.createClass({
         i: this.beginLinkNode.bind(this, 'parent'),
         k: this.beginLinkNode.bind(this, 'child'),
         l: this.beginLinkNode.bind(this, 'sibling'),
-        u: this.unLinkNode
+        u: this.unLinkNode,
+        p: this.print
     }
   },
   
@@ -365,6 +368,18 @@ module.exports = HomePage = React.createClass({
     };
   },
   
+  donePrinting: function() {
+      this.setState({
+          print: false
+      });
+  },
+  
+  print: function() {
+      this.setState({
+          print: true
+      });
+  },
+  
   render: function () {
     var visibleGraphEntryPoint = this.getFlux().store('GraphStore').getRelatedNodes(this.state.focussedNode, 1);
     this.renderedNodes = this.renderGraph(visibleGraphEntryPoint);
@@ -373,8 +388,21 @@ module.exports = HomePage = React.createClass({
     var highlightedNode = _.find(this.renderedNodes, function(n) { return n.props.data.id == this.state.selectedNode; }.bind(this)) 
         || this.renderedNodes[0];
     var selectHighlight = <circle cx={highlightedNode.props.x} cy={highlightedNode.props.y} r="50" stroke="green" fill="none" />;
+    
+    var nodeList;
+    if ( this.state.print ) {
+        var nodeData = this.getFlux().store('GraphStore').getAllNodes();
+        nodeList = Object.keys(nodeData).map(function(n) { return <div key={n}>{nodeData[n].name}</div>; });
+    }
+    
     return (
       <div className='home-page'>
+        {this.state.print ? 
+        <IFrame onDone={this.donePrinting}>
+            {nodeList}
+        </IFrame>
+        : null}
+      
         {this.state.editNode ? <EditNodePanel
             node={this.getFlux().store('GraphStore').getNode(this.state.editingNodeId) || this.newNode(this.state.editingNodeId)}
             onClose={this.handleClose}
@@ -431,6 +459,11 @@ module.exports = HomePage = React.createClass({
                 label="[u] Unlink selected node"
                 secondary={true}
                 onTouchTap={this.unLinkNode}
+            />
+            <FlatButton
+                label="[p] Print"
+                secondary={true}
+                onTouchTap={this.print}
             />
         </div>
       </div>

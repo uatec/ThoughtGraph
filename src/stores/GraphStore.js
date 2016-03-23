@@ -218,6 +218,9 @@ module.exports = GraphStore = Fluxxor.createStore({
     getNode: function(nodeId)
     {
         return this.nodes[nodeId];
-    }
+    },
     
+    getAllNodes: function() {
+        return this.nodes;
+    }
 });
