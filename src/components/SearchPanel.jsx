@@ -10,8 +10,6 @@ var ReactDOM = require('react-dom');
     
 var _ = require('lodash');
 
-var qwest = require('qwest');
-
 var GlobalKeyHookMixin = require('../mixins/GlobalKeyHookMixin.js');
 
 var Fluxxor = require('fluxxor');
