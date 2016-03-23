@@ -211,6 +211,14 @@ module.exports = HomePage = React.createClass({
         this.getFlux().actions.deleteNode(deletedNode);
     },
   
+  componentDidMount: function() {
+    document.body.addEventListener('resize', this.forceUpdate);  
+  },
+  
+  componentWillUnmount: function() {
+    document.body.removeEventListener('resize', this.forceUpdate);
+  },
+  
   getKeyBindings: function() { 
     return {
         e: this.editNode,
@@ -378,11 +386,11 @@ module.exports = HomePage = React.createClass({
         {this.state.showLink ? <SearchPanel
             onClose={this.endLinkNode}
             onItemFound={this.linkNode} /> : null}
-        <Image>
+        <svg viewBox={'0 0 ' + document.body.offsetWidth + ' ' + document.body.offsetHeight} xmlns="http://www.w3.org/2000/svg" version="1.1">
             {lines}
             {this.renderedNodes}
             {selectHighlight}
-        </Image>
+        </svg>
         <div>
             <FlatButton
                 label="[a] Add"
