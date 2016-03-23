@@ -27,6 +27,8 @@
 - Cloud data Sync
 
 ###Mile Stone 3 - Advanced Usability###
+- Improved Node Navigation
+- Improved Node Control
 - Attachments
 - Types
 - Filter view by type
