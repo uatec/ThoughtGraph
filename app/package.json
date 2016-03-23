@@ -1,0 +1,7 @@
+{
+  "main": "./electronMain.js",
+  "version": "0.1.0",
+  "name": "thoughtgraph",
+  "description": "",
+  "author": "Robert Stiff <thoughtgraph@hidefsoftware.co.uk>"
+}

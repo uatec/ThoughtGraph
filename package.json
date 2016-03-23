@@ -2,13 +2,17 @@
   "main": "src/electronMain.js",
   "version": "0.1.0",
   "name": "thoughtgraph",
+  "description": "",
+  "author": "Robert Stiff <thoughtgraph@hidefsoftware.co.uk>",
   "scripts": {
     "server": "gulp develop",
-    "test": "jest"
+    "test": "jest",
+    "pack": "rm -rf ./output && cp ./app/* ./build && ./node_modules/electron-packager/cli.js ./build Thought\\ Graph --out=./output --platform=darwin --arch=x64 --version=0.37.2"
   },
   "devDependencies": {
     "browserify": "^6.3.3",
     "del": "^0.1.3",
+    "electron-packager": "^5.2.1",
     "electron-prebuilt": "0.37.2",
     "gulp": "^3.8.10",
     "gulp-inject": "^1.0.2",
@@ -35,5 +39,9 @@
     "unmockedModulePathPatterns": [
       "node_modules/fluxxor"
     ]
+  },
+  "build": {
+    "app-bundle-id": "your.id",
+    "app-category-type": "your.app.category.type"
   }
 }
