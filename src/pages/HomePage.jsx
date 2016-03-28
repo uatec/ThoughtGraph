@@ -24,8 +24,22 @@ var GlobalKeyHookMixin = require('../mixins/GlobalKeyHookMixin.js');
 var mui = require('material-ui'),
      FlatButton = mui.FlatButton,
      TextField = mui.TextField,
-     Dialog = mui.Dialog;
+     Dialog = mui.Dialog,
+     Toolbar = mui.Toolbar,
+     ToolbarGroup = mui.ToolbarGroup,
+     Paper = mui.Paper,
+     IconMenu = mui.IconMenu,
+     MenuItem = mui.MenuItem;
      
+var IconButton = mui.IconButton;
+var SvgIcons = require('material-ui/lib/svg-icons'),
+    ActionTimeline = SvgIcons.ActionTimeline,
+    ContentAdd = SvgIcons.ContentAdd,
+    ImageEdit = SvgIcons.ImageEdit,
+    ActionDelete = SvgIcons.ActionDelete,
+    ActionSearch = SvgIcons.ActionSearch,
+    ActionPrint = SvgIcons.ActionPrint;
+
 function guid() {
   function s4() {
     return Math.floor((1 + Math.random()) * 0x10000)
@@ -397,6 +411,37 @@ module.exports = HomePage = React.createClass({
     
     return (
       <div className='home-page'>
+        <Toolbar>
+            <ToolbarGroup firstChild={true}>
+                <IconMenu iconButtonElement={<IconButton><ActionTimeline /></IconButton>}>
+                    <MenuItem primaryText="Parent" onTouchTap={this.beginLinkNode.bind(this, 'parent')}/>
+                    <MenuItem primaryText="Sibling" onTouchTap={this.beginLinkNode.bind(this, 'sibling')}/>
+                    <MenuItem secondaryText="something else" primaryText="Child" onTouchTap={this.beginLinkNode.bind(this, 'child')}/>
+                </IconMenu>
+                <IconButton onTouchTap={this.addNode}>
+                    <ContentAdd />
+                </IconButton>
+                <IconButton onTouchTap={this.editNode}>
+                    <ImageEdit />
+                </IconButton>
+                <IconButton onTouchTap={this.deleteNode}>
+                    <ActionDelete />
+                </IconButton>
+            </ToolbarGroup>
+            <ToolbarGroup firstChild={true} float='right'>
+                <IconButton onTouchTap={this.beginSearch}>
+                    <ActionSearch />
+                </IconButton>
+                <FlatButton
+                    label="[u] Unlink selected node"
+                    secondary={true}
+                    onTouchTap={this.unLinkNode}
+                />
+                <IconButton onTouchTap={this.print}>
+                    <ActionPrint />
+                </IconButton>
+            </ToolbarGroup>
+        </Toolbar>
         {this.state.print ? 
         <IFrame onDone={this.donePrinting}>
             {nodeList}
@@ -414,58 +459,13 @@ module.exports = HomePage = React.createClass({
         {this.state.showLink ? <SearchPanel
             onClose={this.endLinkNode}
             onItemFound={this.linkNode} /> : null}
-        <svg viewBox={'0 0 ' + document.body.offsetWidth + ' ' + document.body.offsetHeight} xmlns="http://www.w3.org/2000/svg" version="1.1">
-            {lines}
-            {this.renderedNodes}
-            {selectHighlight}
+        <svg className="thoughtCanvas" viewBox={'0 0 ' + document.body.offsetWidth + ' ' + document.body.offsetHeight} xmlns="http://www.w3.org/2000/svg" version="1.1">
+            <g transform={'translate(' + document.body.offsetWidth/4 + ',' + document.body.offsetHeight/4 + ')'}>
+                {lines}
+                {this.renderedNodes}
+                {selectHighlight}
+            </g>
         </svg>
-        <div>
-            <FlatButton
-                label="[a] Add"
-                secondary={true}
-                onTouchTap={this.addNode}
-            />
-            <FlatButton
-                label="[e] Edit"
-                secondary={true}
-                onTouchTap={this.editNode}
-            />
-            <FlatButton
-                label="[d] Delete"
-                secondary={true}
-                onTouchTap={this.deleteNode}
-            />
-            <FlatButton
-                label="[f] Search"
-                secondary={true}
-                onTouchTap={this.beginSearch}
-            />
-            <FlatButton
-                label="[i] Link Parent Node"
-                secondary={true}
-                onTouchTap={this.beginLinkNode.bind(this, 'parent')}
-            />
-            <FlatButton
-                label="[k] Link Child Node"
-                secondary={true}
-                onTouchTap={this.beginLinkNode.bind(this, 'child')}
-            />
-            <FlatButton
-                label="[l] Link Sibling Node"
-                secondary={true}
-                onTouchTap={this.beginLinkNode.bind(this, 'sibling')}
-            />
-            <FlatButton
-                label="[u] Unlink selected node"
-                secondary={true}
-                onTouchTap={this.unLinkNode}
-            />
-            <FlatButton
-                label="[p] Print"
-                secondary={true}
-                onTouchTap={this.print}
-            />
-        </div>
       </div>
     );
   }
