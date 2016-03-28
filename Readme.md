@@ -1,4 +1,34 @@
 #Thought Graph#
+## Build Instructions ##
+    npm install 
+    gulp
+    npm install -g cordova 
+    
+Web Build
+
+    cordova platform add ios
+    npm run ios
+    
+Mac & iOS Build
+
+    npm install -g ios-deploy
+    cordova platform add ios
+    cordova platform add osx
+    npm run ios
+    npm run osx
+    
+Windows Build    
+
+    cordova platform add windows
+    cordova platform add wp8
+    npm run windows
+    npm run wp8
+    
+Linux Build
+
+    cordova platform add ubuntu
+    npm run ubuntu
+
 ## Road Map ##
 ###Mile Stone 0 - Basic###
 - ~~View a node~~

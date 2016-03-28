@@ -1,6 +1,8 @@
 # Build directory
 build
 output
+platforms
+www
 
 # Copied styles for Material UI
 src/style/material-ui

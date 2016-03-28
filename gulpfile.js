@@ -15,8 +15,8 @@ var gutil = require('gulp-util');
 // Just some directories that we will be providing to `gulp.src` method calls.
 var paths = {
   less: ['src/**/*.less', 'src/**/**/*.less', '!src/{style,style/**}'],
-  css: ['build/**/*.css', '!build/{style,style/**}'],
-  globalcss: ['build/style/*.css'],
+  css: ['www/**/*.css', '!www/{style,style/**}'],
+  globalcss: ['www/style/*.css'],
   style: ['src/style/*.less'],
   appjs: ['./src/app.jsx'],
   js: ['src/**/*.js', 'src/**/*.jsx'],
@@ -24,7 +24,7 @@ var paths = {
 };
 
 // Here is where we will be sending all our files to.
-var destPath = './build';
+var destPath = './www';
 
 /*
  * Handles an error event.
@@ -38,7 +38,7 @@ function swallowError(error) {
  * Deletes the `build` folder.
  */
 gulp.task('clear-build', function (done) {
-  del(['build'], done);
+  del(['www'], done);
 });
 
 /*
