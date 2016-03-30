@@ -147,19 +147,24 @@ module.exports = HomePage = React.createClass({
         return <Node key={node.id} x={x} y={y} data={node} label={node.name} onClick={this.clickNode.bind(this, node)} selected={node.id === this.state.selectedNode} />;
     },
     
-    renderGraph: function(node)
+    renderGraph: function(node, width, height)
     {
         var centre = {x: 0, y: 0};
-        var parentX = 0;  
-        var childX = 0;
         var siblingY = centre.y - 250;
+
+        var parentSpacing = width / node.parents.length;
+        var parentX = width/-2;          
         
         var parents = node.parents.map(function(p) {
-            return this.renderNode(p, parentX += 100, centre.y - 250);
+            return this.renderNode(p, parentX += parentSpacing, centre.y - 250);
         }.bind(this));
 
+
+        var childSpacing = width / node.children.length;
+        var childX = width/-2;          
+
         var children = node.children.map(function(c) {
-            return this.renderNode(c, childX += 100, centre.y + 250);
+            return this.renderNode(c, childX += childSpacing, centre.y + 250);
         }.bind(this));
 
         var siblings = node.siblings.map(function(s) {
@@ -232,13 +237,15 @@ module.exports = HomePage = React.createClass({
         
         this.getFlux().actions.deleteNode(deletedNode);
     },
-  
+   
+     
   componentDidMount: function() {
-    document.body.addEventListener('resize', this.forceUpdate);  
+    this._forceUpdate = function() { console.log(document.body.offsetHeight, document.body.offsetWidth); this.forceUpdate();}.bind(this)
+    window.addEventListener('resize', this._forceUpdate);  
   },
   
   componentWillUnmount: function() {
-    document.body.removeEventListener('resize', this.forceUpdate);
+    window.removeEventListener('resize', this._forceUpdate);
   },
   
   getKeyBindings: function() { 
@@ -402,7 +409,7 @@ module.exports = HomePage = React.createClass({
   
   render: function () {
     var visibleGraphEntryPoint = this.getFlux().store('GraphStore').getRelatedNodes(this.state.focussedNode, 1);
-    this.renderedNodes = this.renderGraph(visibleGraphEntryPoint);
+    this.renderedNodes = this.renderGraph(visibleGraphEntryPoint, document.body.offsetWidth);
    
     var lines = this.renderGraphLines(this.renderedNodes[0]);
 
@@ -479,7 +486,7 @@ module.exports = HomePage = React.createClass({
             <defs>
                 {dropShadow}
             </defs>
-            <g transform={'translate(' + document.body.offsetWidth/4 + ',' + document.body.offsetHeight/4 + ')'}>
+            <g transform={'translate(' + document.body.offsetWidth/2 + ',' + document.body.offsetHeight/2 + ')'}>
                 {lines}
                 {this.renderedNodes}
             </g>
