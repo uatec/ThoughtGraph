@@ -33,12 +33,15 @@ var mui = require('material-ui'),
      
 var IconButton = mui.IconButton;
 var SvgIcons = require('material-ui/lib/svg-icons'),
-    ActionTimeline = SvgIcons.ActionTimeline,
+    EditorInsertLink = SvgIcons.EditorInsertLink,
+    ImageLeakRemove = SvgIcons.ImageLeakRemove,
     ContentAdd = SvgIcons.ContentAdd,
     ImageEdit = SvgIcons.ImageEdit,
     ActionDelete = SvgIcons.ActionDelete,
     ActionSearch = SvgIcons.ActionSearch,
     ActionPrint = SvgIcons.ActionPrint;
+    
+var MediaQuery = require('react-responsive');
 
 function guid() {
   function s4() {
@@ -141,29 +144,32 @@ module.exports = HomePage = React.createClass({
     },
     
     renderNode: function(node, x, y) {
-        return <Node key={node.id} x={x} y={y} data={node} label={node.name} onClick={this.clickNode.bind(this, node)} />;
+        return <Node key={node.id} x={x} y={y} data={node} label={node.name} onClick={this.clickNode.bind(this, node)} selected={node.id === this.state.selectedNode} />;
     },
     
     renderGraph: function(node)
     {
-        var centre = {x: 500, y: 500};
+        var centre = {x: 0, y: 0};
         var parentX = 0;  
         var childX = 0;
-        var siblingY = 250;
+        var siblingY = centre.y - 250;
         
         var parents = node.parents.map(function(p) {
-            return this.renderNode(p, parentX += 100, 250);
+            return this.renderNode(p, parentX += 100, centre.y - 250);
         }.bind(this));
 
         var children = node.children.map(function(c) {
-            return this.renderNode(c, childX += 100, 750);
+            return this.renderNode(c, childX += 100, centre.y + 250);
         }.bind(this));
 
         var siblings = node.siblings.map(function(s) {
             return this.renderNode(s, centre.x + 250, siblingY += 100);
         }.bind(this));
                 
-        return [<Node key={node.id} x={centre.x} y={centre.y} data={node} label={node.id + ' - ' + node.name} onClick={this.clickNode.bind(this, node)} parents={parents} children={children} siblings={siblings} />]
+        return [
+            <Node key={node.id} x={centre.x} y={centre.y} data={node} label={node.name} onClick={this.clickNode.bind(this, node)}
+            selected={node.id === this.state.selectedNode}  
+            parents={parents} children={children} siblings={siblings} />]
             .concat(parents)
             .concat(children)
             .concat(siblings)
@@ -399,31 +405,42 @@ module.exports = HomePage = React.createClass({
     this.renderedNodes = this.renderGraph(visibleGraphEntryPoint);
    
     var lines = this.renderGraphLines(this.renderedNodes[0]);
-    var highlightedNode = _.find(this.renderedNodes, function(n) { return n.props.data.id == this.state.selectedNode; }.bind(this)) 
-        || this.renderedNodes[0];
-    var selectHighlight = <circle cx={highlightedNode.props.x} cy={highlightedNode.props.y} r="50" stroke="green" fill="none" />;
-    
+
     var nodeList;
     if ( this.state.print ) {
         var nodeData = this.getFlux().store('GraphStore').getAllNodes();
         nodeList = Object.keys(nodeData).map(function(n) { return <div key={n}>{nodeData[n].name}</div>; });
     }
     
+    var dropShadow = React.createElement('filter', {id:'dropshadow', height: '130%'} ,
+                [React.createElement('feColorMatrix', {is:'true', type:"matrix",in:"SourceGraphic",
+           values:".12 .12 .12 0 0                    .12 .12 .12 0 0                    .12 .12 .12 0 0                    .12 .12 .12 0 0"}),
+                  React.createElement('feGaussianBlur', {is:'true', in:'SourceAlpha', stdDeviation:'1'}),
+                  React.createElement('feOffset', {is: 'true', dx: 0, dy: 0, result:'offsetblur'}),
+                  React.createElement('feMerge', {}, [
+                      React.createElement('feMergeNode'),
+                      React.createElement('feMergeNode', {is:'true', in:'SourceGraphic'})
+                  ])  
+                ]);
+
     return (
       <div className='home-page'>
+        <MediaQuery query='(max-width: 600px)'>
+            <div style={{height:'24px', backgroundColor:'#1E1E1E'}}>toolbar</div>
+        </MediaQuery>
         <Toolbar>
             <ToolbarGroup firstChild={true}>
-                <IconMenu iconButtonElement={<IconButton><ActionTimeline /></IconButton>}>
-                    <MenuItem primaryText="Parent" onTouchTap={this.beginLinkNode.bind(this, 'parent')}/>
-                    <MenuItem primaryText="Sibling" onTouchTap={this.beginLinkNode.bind(this, 'sibling')}/>
-                    <MenuItem secondaryText="something else" primaryText="Child" onTouchTap={this.beginLinkNode.bind(this, 'child')}/>
-                </IconMenu>
                 <IconButton onTouchTap={this.addNode}>
                     <ContentAdd />
                 </IconButton>
                 <IconButton onTouchTap={this.editNode}>
                     <ImageEdit />
                 </IconButton>
+                <IconMenu iconButtonElement={<IconButton><EditorInsertLink /></IconButton>}>
+                    <MenuItem primaryText="Parent" onTouchTap={this.beginLinkNode.bind(this, 'parent')}/>
+                    <MenuItem primaryText="Sibling" onTouchTap={this.beginLinkNode.bind(this, 'sibling')}/>
+                    <MenuItem primaryText="Child" onTouchTap={this.beginLinkNode.bind(this, 'child')}/>
+                </IconMenu>
                 <IconButton onTouchTap={this.deleteNode}>
                     <ActionDelete />
                 </IconButton>
@@ -432,11 +449,9 @@ module.exports = HomePage = React.createClass({
                 <IconButton onTouchTap={this.beginSearch}>
                     <ActionSearch />
                 </IconButton>
-                <FlatButton
-                    label="[u] Unlink selected node"
-                    secondary={true}
-                    onTouchTap={this.unLinkNode}
-                />
+                <IconButton onTouchTap={this.unLinkNode}>
+                    <ImageLeakRemove />
+                </IconButton>
                 <IconButton onTouchTap={this.print}>
                     <ActionPrint />
                 </IconButton>
@@ -459,11 +474,14 @@ module.exports = HomePage = React.createClass({
         {this.state.showLink ? <SearchPanel
             onClose={this.endLinkNode}
             onItemFound={this.linkNode} /> : null}
-        <svg className="thoughtCanvas" viewBox={'0 0 ' + document.body.offsetWidth + ' ' + document.body.offsetHeight} xmlns="http://www.w3.org/2000/svg" version="1.1">
+        <svg className="thoughtCanvas" viewBox={'0 0 ' + document.body.offsetWidth + ' ' + (document.body.offsetHeight - 56)} height={document.body.offsetHeight - 56} xmlns="http://www.w3.org/2000/svg" version="1.1">
+        
+            <defs>
+                {dropShadow}
+            </defs>
             <g transform={'translate(' + document.body.offsetWidth/4 + ',' + document.body.offsetHeight/4 + ')'}>
                 {lines}
                 {this.renderedNodes}
-                {selectHighlight}
             </g>
         </svg>
       </div>
